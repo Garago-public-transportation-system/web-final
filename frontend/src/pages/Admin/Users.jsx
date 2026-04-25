@@ -123,7 +123,7 @@ const Users = () => {
                 await api.put(`/admin/users/${editing.id}`, payload);
                 addAlert?.({ type: 'OK', message: 'User updated.' });
             } else if (form.role === 'DRIVER') {
-                await api.post('/admin/users/driver', {
+                await api.post('/admin/users/with-driver', {
                     user: {
                         email: form.email,
                         password: form.password,
@@ -166,6 +166,17 @@ const Users = () => {
         try {
             await api.delete(`/admin/users/${id}`);
             addAlert?.({ type: 'OK', message: 'User deactivated.' });
+            fetchUsers();
+        } catch (err) {
+            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || 'Action failed.' });
+        }
+    };
+
+    const doActivate = async (id) => {
+        if (!window.confirm('Reactivate this user?')) return;
+        try {
+            await api.put(`/admin/users/${id}`, { is_active: true });
+            addAlert?.({ type: 'OK', message: 'User activated.' });
             fetchUsers();
         } catch (err) {
             addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || 'Action failed.' });
@@ -249,13 +260,23 @@ const Users = () => {
                                         <td>
                                             <div style={{ display: 'flex', gap: 6 }}>
                                                 <button className="btn ghost" onClick={() => openEdit(u)}>Edit</button>
-                                                <button
-                                                    className="btn"
-                                                    style={{ color: 'var(--crit)' }}
-                                                    onClick={() => doDelete(u.id)}
-                                                >
-                                                    Deactivate
-                                                </button>
+                                                {u.is_active === false ? (
+                                                    <button
+                                                        className="btn"
+                                                        style={{ color: 'var(--ok)' }}
+                                                        onClick={() => doActivate(u.id)}
+                                                    >
+                                                        Activate
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        className="btn"
+                                                        style={{ color: 'var(--crit)' }}
+                                                        onClick={() => doDelete(u.id)}
+                                                    >
+                                                        Deactivate
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

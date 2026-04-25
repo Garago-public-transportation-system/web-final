@@ -34,10 +34,10 @@ const Rotations = () => {
         setLoading(true);
         try {
             const [a, r, d, v] = await Promise.all([
-                api.get('/manager/rotations'),
-                api.get('/admin/routes'),
-                api.get('/admin/drivers'),
-                api.get('/admin/vehicles'),
+                api.get('/admin/rotations').catch(() => ({ data: [] })),
+                api.get('/admin/routes').catch(() => ({ data: [] })),
+                api.get('/admin/drivers').catch(() => ({ data: [] })),
+                api.get('/admin/vehicles').catch(() => ({ data: [] })),
             ]);
             setAssignments(a.data || []);
             setRoutes(r.data || []);

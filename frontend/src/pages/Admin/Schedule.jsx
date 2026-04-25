@@ -184,6 +184,16 @@ const Schedule = () => {
         month: 'short',
     });
 
+    const currentWeekStart = useMemo(() => startOfWeek(new Date()), []);
+    const weekRel = useMemo(() => {
+        const diffDays = Math.round(
+            (weekStart.getTime() - currentWeekStart.getTime()) / (24 * 3600 * 1000),
+        );
+        if (diffDays === 0) return 'CURRENT';
+        if (diffDays < 0) return 'PAST';
+        return 'FUTURE';
+    }, [weekStart, currentWeekStart]);
+
     return (
         <>
             <PageHeader
@@ -219,13 +229,22 @@ const Schedule = () => {
                 {tab === 'ROSTER' ? (
                     <>
                         <div className="sep" />
-                        <button className="btn" onClick={() => shiftWeek(-1)}>
+                        <button
+                            className={`btn ${weekRel === 'PAST' ? 'primary' : ''}`}
+                            onClick={() => shiftWeek(-1)}
+                        >
                             <Icon name="arrow-left" />Prev week
                         </button>
-                        <button className="btn" onClick={() => setWeekStart(startOfWeek(new Date()))}>
+                        <button
+                            className={`btn ${weekRel === 'CURRENT' ? 'primary' : ''}`}
+                            onClick={() => setWeekStart(startOfWeek(new Date()))}
+                        >
                             This week
                         </button>
-                        <button className="btn" onClick={() => shiftWeek(1)}>
+                        <button
+                            className={`btn ${weekRel === 'FUTURE' ? 'primary' : ''}`}
+                            onClick={() => shiftWeek(1)}
+                        >
                             Next week<Icon name="arrow-right" />
                         </button>
                         <span className="mono text-xs muted" style={{ marginInlineStart: 'auto' }}>

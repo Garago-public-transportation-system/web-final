@@ -131,9 +131,9 @@ async def seed(session: AsyncSession):
     # ── 1. Routes ─────────────────────────────────────────────────
     print("[2/9] Seeding routes & stops...")
     route_defs = [
-        ("Route Alpha", "Garage", "Terminal A", 12.5, 45, 5.0),
-        ("Route Beta",  "Garage", "Terminal B", 8.0,  30, 4.0),
-        ("Route Gamma", "Garage", "Terminal C", 20.0, 60, 7.0),
+        ("Route 1", "Garage", "Terminal A", 12.5, 45, 5.0),
+        ("Route 2",  "Garage", "Terminal B", 8.0,  30, 4.0),
+        ("Route 3", "Garage", "Terminal C", 20.0, 60, 7.0),
     ]
     routes = []
     for name, start, end, dist, mins, fare in route_defs:

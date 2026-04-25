@@ -4364,18 +4364,18 @@ COPY public.rotation_assignments (id, route_id, driver_id, vehicle_id, shift_typ
 --
 
 COPY public.route_stops (id, route_id, stop_name, sequence_order, latitude, longitude, dwell_time_minutes, created_at) FROM stdin;
-1	1	Route Alpha Stop 1	1	\N	\N	2	2026-04-25 15:59:49.964032+03
-2	1	Route Alpha Stop 2	2	\N	\N	2	2026-04-25 15:59:49.964032+03
-3	1	Route Alpha Stop 3	3	\N	\N	2	2026-04-25 15:59:49.964032+03
-4	1	Route Alpha Stop 4	4	\N	\N	2	2026-04-25 15:59:49.964032+03
-5	2	Route Beta Stop 1	1	\N	\N	2	2026-04-25 15:59:49.964032+03
-6	2	Route Beta Stop 2	2	\N	\N	2	2026-04-25 15:59:49.964032+03
-7	2	Route Beta Stop 3	3	\N	\N	2	2026-04-25 15:59:49.964032+03
-8	2	Route Beta Stop 4	4	\N	\N	2	2026-04-25 15:59:49.964032+03
-9	3	Route Gamma Stop 1	1	\N	\N	2	2026-04-25 15:59:49.964032+03
-10	3	Route Gamma Stop 2	2	\N	\N	2	2026-04-25 15:59:49.964032+03
-11	3	Route Gamma Stop 3	3	\N	\N	2	2026-04-25 15:59:49.964032+03
-12	3	Route Gamma Stop 4	4	\N	\N	2	2026-04-25 15:59:49.964032+03
+1	1	Route 1 Stop 1	1	\N	\N	2	2026-04-25 15:59:49.964032+03
+2	1	Route 1 Stop 2	2	\N	\N	2	2026-04-25 15:59:49.964032+03
+3	1	Route 1 Stop 3	3	\N	\N	2	2026-04-25 15:59:49.964032+03
+4	1	Route 1 Stop 4	4	\N	\N	2	2026-04-25 15:59:49.964032+03
+5	2	Route 2 Stop 1	1	\N	\N	2	2026-04-25 15:59:49.964032+03
+6	2	Route 2 Stop 2	2	\N	\N	2	2026-04-25 15:59:49.964032+03
+7	2	Route 2 Stop 3	3	\N	\N	2	2026-04-25 15:59:49.964032+03
+8	2	Route 2 Stop 4	4	\N	\N	2	2026-04-25 15:59:49.964032+03
+9	3	Route 3 Stop 1	1	\N	\N	2	2026-04-25 15:59:49.964032+03
+10	3	Route 3 Stop 2	2	\N	\N	2	2026-04-25 15:59:49.964032+03
+11	3	Route 3 Stop 3	3	\N	\N	2	2026-04-25 15:59:49.964032+03
+12	3	Route 3 Stop 4	4	\N	\N	2	2026-04-25 15:59:49.964032+03
 \.
 
 
@@ -4384,9 +4384,9 @@ COPY public.route_stops (id, route_id, stop_name, sequence_order, latitude, long
 --
 
 COPY public.routes (id, name, start_location, end_location, distance_km, estimated_time_minutes, fare, turnaround_time_minutes, is_active, created_at, updated_at) FROM stdin;
-1	Route Alpha	Garage	Terminal A	12.5	45	5	10	t	2026-04-25 15:59:49.964032+03	2026-04-25 15:59:49.964032+03
-2	Route Beta	Garage	Terminal B	8	30	4	10	t	2026-04-25 15:59:49.964032+03	2026-04-25 15:59:49.964032+03
-3	Route Gamma	Garage	Terminal C	20	60	7	10	t	2026-04-25 15:59:49.964032+03	2026-04-25 15:59:49.964032+03
+1	Route 1	Garage	Terminal A	12.5	45	5	10	t	2026-04-25 15:59:49.964032+03	2026-04-25 15:59:49.964032+03
+2	Route 2	Garage	Terminal B	8	30	4	10	t	2026-04-25 15:59:49.964032+03	2026-04-25 15:59:49.964032+03
+3	Route 3	Garage	Terminal C	20	60	7	10	t	2026-04-25 15:59:49.964032+03	2026-04-25 15:59:49.964032+03
 \.
 
 
