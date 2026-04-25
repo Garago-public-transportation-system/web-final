@@ -10,6 +10,7 @@ const emptyForm = {
     year: '',
     capacity: 50,
     garage_id: '',
+    status: 'FREE',
 };
 
 const Vehicles = () => {
@@ -61,6 +62,7 @@ const Vehicles = () => {
             year: v.year ?? '',
             capacity: v.capacity ?? 50,
             garage_id: v.garage_id ?? '',
+            status: v.status || 'FREE',
         });
         setFormError(null);
         setEditorOpen(true);
@@ -69,12 +71,22 @@ const Vehicles = () => {
     const submit = async (e) => {
         e.preventDefault();
         setFormError(null);
-        const payload = {
-            ...form,
-            year: form.year ? Number(form.year) : null,
-            capacity: Number(form.capacity) || 0,
-            garage_id: form.garage_id ? Number(form.garage_id) : null,
-        };
+        const payload = editing
+            ? {
+                  plate_number: form.plate_number,
+                  model: form.model,
+                  year: form.year ? Number(form.year) : null,
+                  capacity: Number(form.capacity) || undefined,
+                  garage_id: form.garage_id ? Number(form.garage_id) : null,
+                  status: form.status,
+              }
+            : {
+                  plate_number: form.plate_number,
+                  model: form.model,
+                  year: form.year ? Number(form.year) : null,
+                  capacity: Number(form.capacity) || 0,
+                  garage_id: form.garage_id ? Number(form.garage_id) : null,
+              };
         setSubmitting(true);
         try {
             if (editing) {
@@ -266,15 +278,34 @@ const Vehicles = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div>
-                                <label>Garage ID</label>
-                                <div className="field">
-                                    <input
-                                        type="number"
-                                        value={form.garage_id ?? ''}
-                                        onChange={(e) => setForm({ ...form, garage_id: e.target.value })}
-                                    />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                <div>
+                                    <label>Garage ID</label>
+                                    <div className="field">
+                                        <input
+                                            type="number"
+                                            value={form.garage_id ?? ''}
+                                            onChange={(e) => setForm({ ...form, garage_id: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
+                                {editing ? (
+                                    <div>
+                                        <label>Status</label>
+                                        <div className="field">
+                                            <select
+                                                value={form.status}
+                                                onChange={(e) => setForm({ ...form, status: e.target.value })}
+                                            >
+                                                <option value="FREE">Free</option>
+                                                <option value="ON_TRIP">On trip</option>
+                                                <option value="MAINTENANCE">Maintenance</option>
+                                                <option value="GARAGE">Garage</option>
+                                                <option value="OUT_OF_SERVICE">Out of service</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                ) : null}
                             </div>
                         </div>
                         <div

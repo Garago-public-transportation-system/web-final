@@ -8,12 +8,12 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'https://web-cz9z.onrender.com',
+        target: 'http://localhost:8000',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
       '/ws': {
-        target: 'wss://web-cz9z.onrender.com',
+        target: 'ws://localhost:8000',
         changeOrigin: true,
         ws: true,
       },

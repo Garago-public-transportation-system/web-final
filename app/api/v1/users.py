@@ -51,6 +51,12 @@ async def update_user(request: Request, id: int, user_in: UserUpdate, db: Annota
     if "password" in update_data and update_data["password"]:
         update_data["hashed_password"] = security.get_password_hash(update_data.pop("password"))
 
+    new_email = update_data.get("email")
+    if new_email and new_email != db_user.email:
+        existing = await db.execute(select(User).where(User.email == new_email, User.id != id))
+        if existing.scalars().first():
+            raise HTTPException(status_code=400, detail="Email already in use by another user")
+
     for key, value in update_data.items():
         setattr(db_user, key, value)
 

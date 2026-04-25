@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
-import { Stat, Panel, PageHeader, MiniMap, Bar, LoadingState, Empty, Tag } from '../../garago/Shell';
+import { Stat, Panel, PageHeader, Bar, LoadingState, Empty, Tag } from '../../garago/Shell';
 import Icon from '../../garago/Icon';
 
 const Dashboard = () => {
@@ -140,128 +140,38 @@ const Dashboard = () => {
                     />
                 </div>
 
-                <div className="grid-3 mb-4" style={{ gridTemplateColumns: '2fr 1fr' }}>
-                    <Panel
-                        title="Live network"
-                        action={(
-                            <span className="tag ok">
-                                <span className="dot" />All systems
-                            </span>
-                        )}
-                    >
-                        <MiniMap
-                            height={340}
-                            pins={tripsPerRoute.slice(0, 6).map((r, i) => ({
-                                x: 15 + ((i * 13) % 80),
-                                y: 22 + ((i * 17) % 60),
-                                label: String(i + 1).padStart(2, '0'),
-                                status: r.trips > 50 ? 'crit' : r.trips > 30 ? 'warn' : 'ok',
-                            }))}
+                <Panel
+                    title="System alerts"
+                    action={(
+                        <a
+                            className="mono text-xs"
+                            onClick={() => navigate('/admin/audit-logs')}
+                            style={{ cursor: 'pointer' }}
                         >
-                            <div className="map-overlay" style={{ top: 12, insetInlineStart: 12 }}>
-                                <div
-                                    className="mono text-xs muted mb-2"
-                                    style={{ letterSpacing: '.06em', textTransform: 'uppercase' }}
-                                >
-                                    Legend
-                                </div>
-                                <div className="flex items-center gap-2 text-xs mb-2">
-                                    <span
-                                        className="map-pin ok"
-                                        style={{ position: 'static', width: 12, height: 12, fontSize: 0 }}
-                                    />
-                                    Normal
-                                </div>
-                                <div className="flex items-center gap-2 text-xs mb-2">
-                                    <span
-                                        className="map-pin warn"
-                                        style={{ position: 'static', width: 12, height: 12, fontSize: 0 }}
-                                    />
-                                    Elevated load
-                                </div>
-                                <div className="flex items-center gap-2 text-xs">
-                                    <span
-                                        className="map-pin crit"
-                                        style={{ position: 'static', width: 12, height: 12, fontSize: 0 }}
-                                    />
-                                    Crowding
-                                </div>
-                            </div>
+                            view all →
+                        </a>
+                    )}
+                    flush
+                >
+                    <div className="mb-4">
+                        {loading ? (
+                            <LoadingState />
+                        ) : audit.length === 0 ? (
+                            <div style={{ padding: 28 }}><Empty>No recent activity</Empty></div>
+                        ) : (
                             <div
-                                className="map-overlay"
-                                style={{ bottom: 12, insetInlineEnd: 12, minWidth: 180 }}
+                                style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+                                    gap: 0,
+                                }}
                             >
-                                <div className="flex justify-between">
-                                    <span className="muted">Routes</span>
-                                    <span className="mono">{stats?.total_routes ?? 0}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="muted">Active trips</span>
-                                    <span className="mono">{stats?.active_trips ?? 0}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="muted">Maintenance</span>
-                                    <span className="mono">{stats?.pending_maintenance ?? 0}</span>
-                                </div>
+                                {audit.slice(0, 8).map((a) => <AlertRow key={a.id} a={a} />)}
                             </div>
-                        </MiniMap>
-                    </Panel>
-
-                    <Panel
-                        title="Alerts"
-                        action={(
-                            <a
-                                className="mono text-xs"
-                                onClick={() => navigate('/admin/audit-logs')}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                view all →
-                            </a>
                         )}
-                    >
-                        <div style={{ margin: -14 }}>
-                            {loading ? (
-                                <LoadingState />
-                            ) : audit.length === 0 ? (
-                                <div style={{ padding: 16 }}><Empty>No recent activity</Empty></div>
-                            ) : (
-                                audit.slice(0, 8).map((a) => {
-                                    const sev = a.action?.includes('DELETE') || a.action?.includes('REJECT')
-                                        ? 'crit'
-                                        : a.action?.includes('CREATE') ? 'ok' : 'warn';
-                                    const at = a.timestamp
-                                        ? new Date(a.timestamp).toLocaleTimeString('en-GB', {
-                                              hour: '2-digit',
-                                              minute: '2-digit',
-                                          })
-                                        : '—';
-                                    return (
-                                        <div
-                                            key={a.id}
-                                            style={{
-                                                padding: 12,
-                                                borderBottom: '1px solid var(--line-soft)',
-                                                display: 'flex',
-                                                gap: 10,
-                                            }}
-                                        >
-                                            <span className={`tag ${sev}`} style={{ flexShrink: 0 }}>{at}</span>
-                                            <div style={{ fontSize: 12.5, lineHeight: 1.4 }}>
-                                                {a.action} {a.target_type ? `· ${a.target_type}` : ''}
-                                                <div
-                                                    className="muted mono text-xs mt-2"
-                                                    style={{ fontSize: 10, letterSpacing: '.04em' }}
-                                                >
-                                                    {a.actor_email || 'system'}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </div>
-                    </Panel>
-                </div>
+                    </div>
+                </Panel>
+                <div style={{ height: 16 }} />
 
                 <div className="grid-3 mb-4">
                     <Panel
@@ -364,6 +274,108 @@ const Dashboard = () => {
                 </Panel>
             </div>
         </>
+    );
+};
+
+const SEVERITY = {
+    crit: {
+        bar: 'var(--crit)',
+        bg: 'color-mix(in oklab, var(--crit) 8%, transparent)',
+        chipBg: 'color-mix(in oklab, var(--crit) 18%, transparent)',
+        chipFg: 'var(--crit)',
+        label: 'CRITICAL',
+        icon: 'alert-octagon',
+    },
+    warn: {
+        bar: 'var(--warn)',
+        bg: 'color-mix(in oklab, var(--warn) 8%, transparent)',
+        chipBg: 'color-mix(in oklab, var(--warn) 22%, transparent)',
+        chipFg: 'var(--warn)',
+        label: 'WARN',
+        icon: 'alert-triangle',
+    },
+    ok: {
+        bar: 'var(--ok)',
+        bg: 'color-mix(in oklab, var(--ok) 7%, transparent)',
+        chipBg: 'color-mix(in oklab, var(--ok) 20%, transparent)',
+        chipFg: 'var(--ok)',
+        label: 'OK',
+        icon: 'check',
+    },
+};
+
+const AlertRow = ({ a }) => {
+    const sev = a.action?.includes('DELETE') || a.action?.includes('REJECT')
+        ? 'crit'
+        : a.action?.includes('CREATE') || a.action?.includes('APPROVE')
+            ? 'ok'
+            : 'warn';
+    const cfg = SEVERITY[sev];
+    const at = a.timestamp
+        ? new Date(a.timestamp).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+        : '—';
+    const date = a.timestamp
+        ? new Date(a.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+        : '';
+    return (
+        <div
+            style={{
+                position: 'relative',
+                padding: '14px 16px 14px 22px',
+                borderBottom: '1px solid var(--line-soft)',
+                background: cfg.bg,
+                display: 'flex',
+                gap: 12,
+                alignItems: 'flex-start',
+            }}
+        >
+            <span
+                style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 4,
+                    background: cfg.bar,
+                }}
+            />
+            <span
+                style={{
+                    flexShrink: 0,
+                    fontSize: 9.5,
+                    fontFamily: 'JetBrains Mono, monospace',
+                    fontWeight: 700,
+                    letterSpacing: '.08em',
+                    padding: '3px 7px',
+                    background: cfg.chipBg,
+                    color: cfg.chipFg,
+                    borderRadius: 2,
+                }}
+            >
+                {cfg.label}
+            </span>
+            <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 13, lineHeight: 1.4, fontWeight: 500 }}>
+                    {a.action || 'EVENT'}
+                    {a.target_type ? (
+                        <span className="muted mono text-xs" style={{ marginLeft: 6 }}>
+                            · {a.target_type}{a.target_id != null ? ` #${a.target_id}` : ''}
+                        </span>
+                    ) : null}
+                </div>
+                <div
+                    className="mono"
+                    style={{
+                        fontSize: 11,
+                        marginTop: 4,
+                        color: 'var(--ink-4)',
+                        letterSpacing: '.02em',
+                    }}
+                >
+                    {a.actor_email || 'system'} · {date} {at}
+                </div>
+            </div>
+        </div>
     );
 };
 

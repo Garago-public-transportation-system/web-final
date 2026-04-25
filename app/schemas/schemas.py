@@ -44,8 +44,10 @@ class UserCreate(UserBase):
         return _validate_password_strength(v)
 
 class UserUpdate(BaseSchema):
+    email: Optional[EmailStr] = None
     full_name: Optional[str] = None
     phone: Optional[str] = Field(None, pattern=r'^\+?[1-9]\d{1,14}$')
+    role: Optional[UserRole] = None
     preferred_language: Optional[str] = None
     is_active: Optional[bool] = None
     password: Optional[str] = Field(None, min_length=8)
@@ -101,11 +103,12 @@ class DriverCreate(DriverBase):
 
 class DriverUpdate(BaseSchema):
     license_number: Optional[str] = None
-    phone: Optional[str] = Field(None, pattern=r'^\+?[1-9]\d{1,14}$')
     license_expiry: Optional[date] = None
+    garage_id: Optional[int] = None
     status: Optional[DriverStatus] = None
     current_vehicle_id: Optional[int] = None
     current_route_id: Optional[int] = None
+    rating: Optional[float] = Field(None, ge=0, le=5)
 
 class DriverResponse(DriverBase):
     id: int
@@ -136,6 +139,11 @@ class VehicleCreate(VehicleBase):
     pass
 
 class VehicleUpdate(BaseSchema):
+    plate_number: Optional[str] = Field(None, pattern=r'^[A-Z0-9-]{3,10}$')
+    model: Optional[str] = None
+    year: Optional[int] = Field(None, ge=1900, le=2100)
+    capacity: Optional[int] = Field(None, gt=0)
+    garage_id: Optional[int] = None
     status: Optional[VehicleStatus] = None
 
 class VehicleResponse(VehicleBase):

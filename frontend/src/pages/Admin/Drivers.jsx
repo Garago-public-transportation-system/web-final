@@ -9,6 +9,10 @@ const emptyForm = {
     license_number: '',
     license_expiry: '',
     garage_id: '',
+    status: 'OFF_DUTY',
+    current_vehicle_id: '',
+    current_route_id: '',
+    rating: 5,
 };
 
 const Drivers = () => {
@@ -65,7 +69,11 @@ const Drivers = () => {
             user_id: d.user_id || '',
             license_number: d.license_number || '',
             license_expiry: d.license_expiry || '',
-            garage_id: d.garage_id || '',
+            garage_id: d.garage_id ?? '',
+            status: d.status || 'OFF_DUTY',
+            current_vehicle_id: d.current_vehicle_id ?? '',
+            current_route_id: d.current_route_id ?? '',
+            rating: d.rating ?? 5,
         });
         setFormError(null);
         setEditorOpen(true);
@@ -81,10 +89,25 @@ const Drivers = () => {
         setSubmitting(true);
         try {
             if (editing) {
-                await api.put(`/admin/drivers/${editing.id}`, form);
+                const payload = {
+                    license_number: form.license_number,
+                    license_expiry: form.license_expiry || null,
+                    garage_id: form.garage_id !== '' ? Number(form.garage_id) : null,
+                    status: form.status,
+                    current_vehicle_id: form.current_vehicle_id !== '' ? Number(form.current_vehicle_id) : null,
+                    current_route_id: form.current_route_id !== '' ? Number(form.current_route_id) : null,
+                    rating: form.rating !== '' ? Number(form.rating) : null,
+                };
+                await api.put(`/admin/drivers/${editing.id}`, payload);
                 addAlert?.({ type: 'OK', message: 'Driver updated.' });
             } else {
-                await api.post('/admin/drivers', form);
+                const payload = {
+                    user_id: form.user_id ? Number(form.user_id) : undefined,
+                    license_number: form.license_number,
+                    license_expiry: form.license_expiry || null,
+                    garage_id: form.garage_id ? Number(form.garage_id) : null,
+                };
+                await api.post('/admin/drivers', payload);
                 addAlert?.({ type: 'OK', message: 'Driver created.' });
             }
             setEditorOpen(false);
@@ -323,15 +346,81 @@ const Drivers = () => {
                                 </div>
                             </div>
 
-                            <div>
-                                <label>Garage ID</label>
-                                <div className="field">
-                                    <input
-                                        value={form.garage_id || ''}
-                                        onChange={(e) => setForm({ ...form, garage_id: e.target.value })}
-                                    />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                <div>
+                                    <label>Garage ID</label>
+                                    <div className="field">
+                                        <input
+                                            type="number"
+                                            value={form.garage_id ?? ''}
+                                            onChange={(e) => setForm({ ...form, garage_id: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
+                                {editing ? (
+                                    <div>
+                                        <label>Status</label>
+                                        <div className="field">
+                                            <select
+                                                value={form.status}
+                                                onChange={(e) => setForm({ ...form, status: e.target.value })}
+                                            >
+                                                <option value="OFF_DUTY">Off duty</option>
+                                                <option value="ACTIVE">Active</option>
+                                                <option value="ON_TRIP">On trip</option>
+                                                <option value="ON_BREAK">On break</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                ) : null}
                             </div>
+
+                            {editing ? (
+                                <>
+                                    <div className="rule" />
+                                    <div
+                                        className="mono text-xs muted"
+                                        style={{ letterSpacing: '.06em', textTransform: 'uppercase' }}
+                                    >
+                                        Assignment & rating
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                                        <div>
+                                            <label>Vehicle ID</label>
+                                            <div className="field">
+                                                <input
+                                                    type="number"
+                                                    value={form.current_vehicle_id ?? ''}
+                                                    onChange={(e) => setForm({ ...form, current_vehicle_id: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label>Route ID</label>
+                                            <div className="field">
+                                                <input
+                                                    type="number"
+                                                    value={form.current_route_id ?? ''}
+                                                    onChange={(e) => setForm({ ...form, current_route_id: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label>Rating (0-5)</label>
+                                            <div className="field">
+                                                <input
+                                                    type="number"
+                                                    step="0.1"
+                                                    min="0"
+                                                    max="5"
+                                                    value={form.rating ?? ''}
+                                                    onChange={(e) => setForm({ ...form, rating: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : null}
                         </div>
                         <div
                             style={{

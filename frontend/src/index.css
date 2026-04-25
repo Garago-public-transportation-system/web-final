@@ -1,36 +1,39 @@
 /* ============ Garago — Editorial Mono Design System ============ */
 :root {
-  --bg: #fafaf7;
+  /* Garago — Clean Pro: cool slate neutrals + confident blue accent */
+  --bg: #f7f8fa;
   --panel: #ffffff;
-  --ink: #0a0a0a;
-  --ink-2: #262626;
-  --ink-3: #525252;
-  --ink-4: #737373;
-  --ink-5: #a3a3a3;
-  --line: #000000;
-  --line-soft: #e5e5e2;
-  --line-softer: #efefe9;
-  --hover: #f2f2ec;
-  --accent: oklch(0.68 0.17 35);
-  --accent-weak: oklch(0.95 0.04 55);
-  --ok: oklch(0.62 0.14 145);
-  --warn: oklch(0.75 0.15 80);
-  --crit: oklch(0.58 0.2 25);
-  --radius: 2px;
+  --ink: #0f172a;
+  --ink-2: #1e293b;
+  --ink-3: #475569;
+  --ink-4: #64748b;
+  --ink-5: #94a3b8;
+  --line: #0f172a;
+  --line-soft: #e2e8f0;
+  --line-softer: #f1f5f9;
+  --hover: #f1f5f9;
+  --accent: #2563eb;
+  --accent-weak: #dbeafe;
+  --ok: oklch(0.62 0.14 152);
+  --warn: oklch(0.72 0.16 70);
+  --crit: oklch(0.58 0.21 27);
+  --radius: 4px;
   --density: 1;
 }
 [data-theme="dark"] {
-  --bg: #0a0a09;
-  --panel: #111110;
-  --ink: #f5f5f0;
-  --ink-2: #e5e5e0;
-  --ink-3: #a3a39d;
-  --ink-4: #737370;
-  --ink-5: #525250;
-  --line: #f5f5f0;
-  --line-soft: #26261f;
-  --line-softer: #1a1a14;
-  --hover: #1a1a14;
+  --bg: #0b1220;
+  --panel: #131c2e;
+  --ink: #f8fafc;
+  --ink-2: #e2e8f0;
+  --ink-3: #cbd5e1;
+  --ink-4: #94a3b8;
+  --ink-5: #64748b;
+  --line: #f8fafc;
+  --line-soft: #1f2a3d;
+  --line-softer: #182338;
+  --hover: #1c2740;
+  --accent: #60a5fa;
+  --accent-weak: #1e3a8a;
 }
 
 * { box-sizing: border-box; }

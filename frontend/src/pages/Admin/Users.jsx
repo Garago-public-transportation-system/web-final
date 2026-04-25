@@ -14,6 +14,8 @@ const emptyForm = {
     license_number: '',
     license_expiry: '',
     garage_id: '',
+    is_active: true,
+    preferred_language: 'en',
 };
 
 const validatePwd = (pwd) => {
@@ -84,6 +86,8 @@ const Users = () => {
             role: u.role || 'DRIVER',
             phone_code: pCode,
             phone_number: pNum,
+            is_active: u.is_active !== false,
+            preferred_language: u.preferred_language || 'en',
         });
         setFormErrors([]);
         setEditorOpen(true);
@@ -111,7 +115,9 @@ const Users = () => {
                     email: form.email,
                     full_name: form.full_name,
                     role: form.role,
-                    phone: fullPhone,
+                    phone: form.phone_number ? fullPhone : null,
+                    preferred_language: form.preferred_language,
+                    is_active: form.is_active,
                 };
                 if (form.password) payload.password = form.password;
                 await api.put(`/admin/users/${editing.id}`, payload);
@@ -286,7 +292,6 @@ const Users = () => {
                                             type="email"
                                             value={form.email}
                                             onChange={(e) => setForm({ ...form, email: e.target.value })}
-                                            disabled={!!editing}
                                             required
                                         />
                                     </div>
@@ -320,7 +325,6 @@ const Users = () => {
                                         <select
                                             value={form.role}
                                             onChange={(e) => setForm({ ...form, role: e.target.value })}
-                                            disabled={!!editing}
                                         >
                                             <option value="ADMIN">Admin</option>
                                             <option value="MANAGER">Manager</option>
@@ -355,6 +359,35 @@ const Users = () => {
                                     </div>
                                 </div>
                             </div>
+
+                            {editing ? (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                    <div>
+                                        <label>Status</label>
+                                        <div className="field">
+                                            <select
+                                                value={form.is_active ? 'true' : 'false'}
+                                                onChange={(e) => setForm({ ...form, is_active: e.target.value === 'true' })}
+                                            >
+                                                <option value="true">Active</option>
+                                                <option value="false">Inactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label>Preferred language</label>
+                                        <div className="field">
+                                            <select
+                                                value={form.preferred_language}
+                                                onChange={(e) => setForm({ ...form, preferred_language: e.target.value })}
+                                            >
+                                                <option value="en">English</option>
+                                                <option value="ar">Arabic</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : null}
 
                             {!editing && form.role === 'DRIVER' ? (
                                 <>
