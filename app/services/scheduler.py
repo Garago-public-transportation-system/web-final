@@ -30,6 +30,18 @@ async def rotation_manager_job():
         except Exception as e:
             logger.error(f"Rotation manager failed: {e}")
 
+async def lateness_job():
+    """GAP-06: every minute, flip `is_late` on ACTIVE trips past their grace
+    window so DailyReport.on_time_percentage reflects reality."""
+    async with AsyncSessionLocal() as db:
+        try:
+            from app.services.trip_service import update_late_trips
+            flipped = await update_late_trips(db)
+            if flipped:
+                logger.info(f"Lateness job: marked {flipped} active trip(s) as late")
+        except Exception as e:
+            logger.error(f"Lateness job failed: {e}")
+
 async def midnight_reset_job():
     """D2: Reset daily driver counters at midnight."""
     logger.info("Running midnight reset for all drivers")
@@ -70,6 +82,17 @@ def start_scheduler():
         max_instances=1,
     )
     
+    # GAP-06: Persist trip.is_late for active trips past their grace window.
+    scheduler.add_job(
+        lateness_job,
+        'interval',
+        minutes=1,
+        id="lateness_persistence",
+        replace_existing=True,
+        misfire_grace_time=60,
+        max_instances=1,
+    )
+
     # D2: Reset daily counters at midnight
     scheduler.add_job(
         midnight_reset_job,
@@ -77,6 +100,6 @@ def start_scheduler():
         id="midnight_reset",
         replace_existing=True
     )
-    
+
     scheduler.start()
     logger.info("APScheduler started")

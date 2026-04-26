@@ -3,6 +3,7 @@ import api from '../../api/axios';
 import { PageHeader, Filterbar, Panel, Stat, LoadingState, Empty } from '../../garago/Shell';
 import Icon from '../../garago/Icon';
 import { useAlertStore } from '../../store/alertStore';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const today = new Date().toISOString().split('T')[0];
 const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -19,52 +20,18 @@ const loadHistory = () => {
     }
 };
 
-const REPORT_CARDS = [
-    {
-        key: 'DAILY',
-        icon: 'dashboard',
-        label: 'Daily operations',
-        desc: 'Trips, revenue, crowding — last 24h snapshot.',
-        range: 1,
-    },
-    {
-        key: 'REVENUE',
-        icon: 'ticket',
-        label: 'Revenue breakdown',
-        desc: 'Route × shift × payment status.',
-        range: 7,
-    },
-    {
-        key: 'ROUTE',
-        icon: 'route',
-        label: 'Route performance',
-        desc: 'Trip count, on-time %, average revenue per route.',
-        range: 14,
-    },
-    {
-        key: 'SHIFT',
-        icon: 'schedule',
-        label: 'Shift performance',
-        desc: 'Morning vs. evening yield and occupancy.',
-        range: 14,
-    },
-    {
-        key: 'MAINTENANCE',
-        icon: 'wrench',
-        label: 'Maintenance log',
-        desc: 'Vehicle downtime, work orders, cost by month.',
-        range: 30,
-    },
-    {
-        key: 'AUDIT',
-        icon: 'audit',
-        label: 'Audit activity',
-        desc: 'Admin and manager actions across the system.',
-        range: 30,
-    },
+const buildReportCards = (t) => [
+    { key: 'DAILY', icon: 'dashboard', label: t('reports.dailyOps'), desc: t('reports.dailyOpsDesc'), range: 1 },
+    { key: 'REVENUE', icon: 'ticket', label: t('reports.revenueBreakdown'), desc: t('reports.revenueBreakdownDesc'), range: 7 },
+    { key: 'ROUTE', icon: 'route', label: t('reports.routePerf'), desc: t('reports.routePerfDesc'), range: 14 },
+    { key: 'SHIFT', icon: 'schedule', label: t('reports.shiftPerf'), desc: t('reports.shiftPerfDesc'), range: 14 },
+    { key: 'MAINTENANCE', icon: 'wrench', label: t('reports.maintLog'), desc: t('reports.maintLogDesc'), range: 30 },
+    { key: 'AUDIT', icon: 'audit', label: t('reports.auditAct'), desc: t('reports.auditActDesc'), range: 30 },
 ];
 
 const AdminReports = () => {
+    const { t } = useTranslation();
+    const REPORT_CARDS = useMemo(() => buildReportCards(t), [t]);
     const addAlert = useAlertStore((s) => s.addAlert);
     const [startDate, setStartDate] = useState(sevenDaysAgo);
     const [endDate, setEndDate] = useState(today);
@@ -87,7 +54,7 @@ const AdminReports = () => {
         const e = overrideEnd || endDate;
         if (!s || !e) return;
         if (s > e) {
-            addAlert?.({ type: 'WARN', message: 'Start date must be before end date.' });
+            addAlert?.({ type: 'WARN', message: t('reports.dateOrderError') });
             return;
         }
         setLoading(true);
@@ -96,11 +63,11 @@ const AdminReports = () => {
             const res = await api.get('/admin/reports/breakdown', { params: { start: s, end: e } });
             setBreakdown(res.data);
         } catch (err) {
-            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || 'Failed to load report.' });
+            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || t('reports.failedLoad') });
         } finally {
             setLoading(false);
         }
-    }, [startDate, endDate, addAlert]);
+    }, [startDate, endDate, addAlert, t]);
 
     const pickCard = (card) => {
         const end = today;
@@ -114,9 +81,9 @@ const AdminReports = () => {
             setTab('ROUTE');
             generate(start, end);
         } else if (card.key === 'MAINTENANCE') {
-            addAlert?.({ type: 'INFO', message: 'Maintenance report uses the Maintenance page exports.' });
+            addAlert?.({ type: 'INFO', message: t('reports.maintNote') });
         } else if (card.key === 'AUDIT') {
-            addAlert?.({ type: 'INFO', message: 'Audit log export is available on the Audit logs page.' });
+            addAlert?.({ type: 'INFO', message: t('reports.auditNote') });
         }
     };
 
@@ -135,7 +102,7 @@ const AdminReports = () => {
             link.download = `report_${startDate}_to_${endDate}.${ext}`;
             link.click();
             window.URL.revokeObjectURL(url);
-            addAlert?.({ type: 'OK', message: `${format.toUpperCase()} exported.` });
+            addAlert?.({ type: 'OK', message: t('reports.exportOk', { f: format.toUpperCase() }) });
             setHistory((prev) => [
                 {
                     id: `${Date.now()}`,
@@ -148,7 +115,7 @@ const AdminReports = () => {
                 ...prev,
             ].slice(0, 20));
         } catch (err) {
-            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || 'Export failed.' });
+            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || t('reports.exportFailed') });
         } finally {
             setExporting(null);
         }
@@ -166,15 +133,15 @@ const AdminReports = () => {
     return (
         <>
             <PageHeader
-                title="Reports"
-                sub={breakdown ? `${startDate} → ${endDate}` : 'Pick a report to run'}
+                title={t('sidebar.reports')}
+                sub={breakdown ? `${startDate} → ${endDate}` : t('reports.subTitle.pick')}
                 actions={breakdown ? (
                     <>
                         <button className="btn" onClick={() => exportAs('csv')} disabled={!!exporting}>
-                            <Icon name="download" />{exporting === 'csv' ? 'Exporting…' : 'Export CSV'}
+                            <Icon name="download" />{exporting === 'csv' ? t('shell.exporting') : t('shell.exportCsv')}
                         </button>
                         <button className="btn" onClick={() => exportAs('pdf')} disabled={!!exporting}>
-                            <Icon name="download" />{exporting === 'pdf' ? 'Exporting…' : 'Export PDF'}
+                            <Icon name="download" />{exporting === 'pdf' ? t('shell.exporting') : t('shell.exportPdf')}
                         </button>
                     </>
                 ) : null}
@@ -182,8 +149,8 @@ const AdminReports = () => {
 
             <div className="main-body">
                 <Panel
-                    title="Report library"
-                    action={<span className="mono text-xs muted">{REPORT_CARDS.length} templates</span>}
+                    title={t('reports.library')}
+                    action={<span className="mono text-xs muted">{t('reports.templates', { n: REPORT_CARDS.length })}</span>}
                 >
                     <div style={{
                         display: 'grid',
@@ -228,7 +195,7 @@ const AdminReports = () => {
                                         color: 'var(--ink-3)',
                                     }}
                                 >
-                                    Last {c.range}d
+                                    {t('reports.last', { n: c.range })}
                                 </div>
                             </button>
                         ))}
@@ -239,19 +206,19 @@ const AdminReports = () => {
 
                 <Filterbar>
                     <div className="field">
-                        <label className="muted text-xs mono" style={{ marginRight: 6 }}>Start</label>
+                        <label className="muted text-xs mono" style={{ marginRight: 6 }}>{t('shell.start')}</label>
                         <input type="date" value={startDate} max={endDate || today} onChange={(e) => setStartDate(e.target.value)} />
                     </div>
                     <div className="field">
-                        <label className="muted text-xs mono" style={{ marginRight: 6 }}>End</label>
+                        <label className="muted text-xs mono" style={{ marginRight: 6 }}>{t('shell.end')}</label>
                         <input type="date" value={endDate} min={startDate} max={today} onChange={(e) => setEndDate(e.target.value)} />
                     </div>
                     <button className="btn primary" onClick={() => generate()} disabled={loading}>
-                        <Icon name="search" />{loading ? 'Generating…' : 'Generate'}
+                        <Icon name="search" />{loading ? t('shell.working') : t('reports.generate')}
                     </button>
                     <div className="sep" />
                     {breakdown ? (
-                        <span className="mono text-xs muted">{routeTotals.length} routes · {shiftTotals.length} shifts</span>
+                        <span className="mono text-xs muted">{t('reports.routesAndShifts', { r: routeTotals.length, s: shiftTotals.length })}</span>
                     ) : null}
                 </Filterbar>
 
@@ -260,17 +227,17 @@ const AdminReports = () => {
                 ) : !breakdown ? (
                     <Panel>
                         <div style={{ padding: 28 }}>
-                            <Empty>Pick a report template above or set a date range and generate.</Empty>
+                            <Empty>{t('reports.pickEmpty')}</Empty>
                         </div>
                     </Panel>
                 ) : (
                     <>
                         <div className="grid-4 mb-4">
-                            <Stat label="Total revenue (EGP)" value={revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} />
-                            <Stat label="Total trips" value={trips.toLocaleString()} />
-                            <Stat label="Routes covered" value={String(routeTotals.length)} />
+                            <Stat label={t('reports.totalRevenue')} value={revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} />
+                            <Stat label={t('reports.totalTrips')} value={trips.toLocaleString()} />
+                            <Stat label={t('reports.routesCovered')} value={String(routeTotals.length)} />
                             <Stat
-                                label="Avg per trip"
+                                label={t('reports.avgPerTrip')}
                                 value={trips > 0 ? (revenue / trips).toFixed(2) : '—'}
                             />
                         </div>
@@ -281,22 +248,22 @@ const AdminReports = () => {
                                     className={`btn ${tab === 'ROUTE' ? 'primary' : ''}`}
                                     onClick={() => setTab('ROUTE')}
                                 >
-                                    By route
+                                    {t('reports.byRoute')}
                                 </button>
                                 <button
                                     className={`btn ${tab === 'SHIFT' ? 'primary' : ''}`}
                                     onClick={() => setTab('SHIFT')}
                                 >
-                                    By shift
+                                    {t('reports.byShift')}
                                 </button>
                             </div>
                         </Filterbar>
 
                         <Panel flush>
                             {tab === 'ROUTE' ? (
-                                <RouteTable rows={routeTotals} />
+                                <RouteTable rows={routeTotals} t={t} />
                             ) : (
-                                <ShiftTable rows={shiftTotals} />
+                                <ShiftTable rows={shiftTotals} t={t} />
                             )}
                         </Panel>
                     </>
@@ -305,11 +272,11 @@ const AdminReports = () => {
                 <div style={{ height: 16 }} />
 
                 <Panel
-                    title="Recent exports"
+                    title={t('reports.recentExports')}
                     action={
                         history.length > 0 ? (
                             <button className="btn ghost" onClick={() => setHistory([])}>
-                                <Icon name="x" />Clear
+                                <Icon name="x" />{t('reports.clear')}
                             </button>
                         ) : (
                             <span className="mono text-xs muted">{history.length}</span>
@@ -318,15 +285,15 @@ const AdminReports = () => {
                     flush
                 >
                     {history.length === 0 ? (
-                        <div style={{ padding: 28 }}><Empty>No exports yet.</Empty></div>
+                        <div style={{ padding: 28 }}><Empty>{t('reports.noExports')}</Empty></div>
                     ) : (
                         <table className="tbl">
                             <thead>
                                 <tr>
-                                    <th>Kind</th>
-                                    <th>Range</th>
-                                    <th>Format</th>
-                                    <th>Exported</th>
+                                    <th>{t('reports.kind')}</th>
+                                    <th>{t('reports.range')}</th>
+                                    <th>{t('reports.format')}</th>
+                                    <th>{t('reports.exported')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -362,19 +329,19 @@ const AdminReports = () => {
     );
 };
 
-const RouteTable = ({ rows }) => {
-    if (!rows.length) return <div style={{ padding: 28 }}><Empty>No route data.</Empty></div>;
+const RouteTable = ({ rows, t }) => {
+    if (!rows.length) return <div style={{ padding: 28 }}><Empty>{t('reports.noData')}</Empty></div>;
     const totalTrips = rows.reduce((s, r) => s + (r.trip_count || 0), 0);
     const totalRev = rows.reduce((s, r) => s + (r.total_revenue || 0), 0);
     return (
         <table className="tbl">
             <thead>
                 <tr>
-                    <th>Route</th>
-                    <th className="num">Trips</th>
-                    <th className="num">Revenue (EGP)</th>
-                    <th className="num">Avg / trip</th>
-                    <th className="num">On-time</th>
+                    <th>{t('rotations.route')}</th>
+                    <th className="num">{t('reports.tripCount')}</th>
+                    <th className="num">{t('tickets.revenue')}</th>
+                    <th className="num">{t('reports.avgPerTrip')}</th>
+                    <th className="num">{t('reports.onTime')}</th>
                 </tr>
             </thead>
             <tbody>
@@ -392,7 +359,7 @@ const RouteTable = ({ rows }) => {
                     </tr>
                 ))}
                 <tr style={{ borderTop: '1px solid var(--line)' }}>
-                    <td><strong>Total</strong></td>
+                    <td><strong>{t('reports.total')}</strong></td>
                     <td className="num mono text-xs"><strong>{totalTrips}</strong></td>
                     <td className="num mono"><strong>{totalRev.toFixed(2)}</strong></td>
                     <td className="num mono text-xs muted">—</td>
@@ -403,16 +370,16 @@ const RouteTable = ({ rows }) => {
     );
 };
 
-const ShiftTable = ({ rows }) => {
-    if (!rows.length) return <div style={{ padding: 28 }}><Empty>No shift data.</Empty></div>;
+const ShiftTable = ({ rows, t }) => {
+    if (!rows.length) return <div style={{ padding: 28 }}><Empty>{t('reports.noData')}</Empty></div>;
     return (
         <table className="tbl">
             <thead>
                 <tr>
-                    <th>Shift</th>
-                    <th className="num">Trips</th>
-                    <th className="num">Revenue (EGP)</th>
-                    <th className="num">Avg / trip</th>
+                    <th>{t('reports.shift')}</th>
+                    <th className="num">{t('reports.tripCount')}</th>
+                    <th className="num">{t('tickets.revenue')}</th>
+                    <th className="num">{t('reports.avgPerTrip')}</th>
                 </tr>
             </thead>
             <tbody>

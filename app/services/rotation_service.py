@@ -63,6 +63,7 @@ async def generate_daily_schedule(db: AsyncSession, target_date: date, regenerat
     
     new_assignments = []
     new_trips = []
+    skipped_routes: list[tuple[str, str]] = []  # (route_name, reason)
 
     # Generate schedules for both shifts based on settings
     from app.core.config import settings
@@ -70,11 +71,22 @@ async def generate_daily_schedule(db: AsyncSession, target_date: date, regenerat
         (ShiftType.MORNING, settings.MORNING_SHIFT_START, settings.MORNING_SHIFT_END),
         (ShiftType.EVENING, settings.EVENING_SHIFT_START, settings.EVENING_SHIFT_END),
     ]
-    
+
     for route in routes:
         for shift_type, start_hour, end_hour in shifts:
+            # GAP-04: don't silently break — record the skip and keep generating
+            # the remaining routes/shifts so the admin sees what couldn't be staffed.
             if len(available_drivers) < 3 or len(available_vehicles) < 2:
-                break
+                reason = (
+                    f"insufficient pool for {shift_type.value} "
+                    f"(drivers_left={len(available_drivers)}, vehicles_left={len(available_vehicles)}; "
+                    f"need 3 drivers + 2 vehicles)"
+                )
+                logger.error(
+                    f"generate_daily_schedule: route '{route.name}' (id={route.id}) skipped — {reason}"
+                )
+                skipped_routes.append((route.name, reason))
+                continue
             
             # Select 3 drivers and 2 vehicles for this route/shift
             route_drivers = [available_drivers.pop(0) for _ in range(3)]
@@ -158,6 +170,30 @@ async def generate_daily_schedule(db: AsyncSession, target_date: date, regenerat
                 new_trips.append(t2)
     
     await db.commit()
+
+    # Notify admins about routes that couldn't be staffed (GAP-04).
+    if skipped_routes:
+        try:
+            from app.services.notification_service import create_notification
+            from app.models.models import UserRole, User
+            admin_ids = (await db.execute(
+                select(User.id).where(User.role == UserRole.ADMIN, User.is_active == True)
+            )).scalars().all()
+            summary = "; ".join(f"{name} — {reason}" for name, reason in skipped_routes[:5])
+            if len(skipped_routes) > 5:
+                summary += f" (+{len(skipped_routes) - 5} more)"
+            for admin_id in admin_ids:
+                await create_notification(
+                    db=db,
+                    user_id=admin_id,
+                    title=f"Schedule generation: {len(skipped_routes)} route(s) unstaffed",
+                    message=summary,
+                    type="SCHEDULE_GAP",
+                )
+            await db.commit()
+        except Exception as exc:
+            logger.exception(f"Failed to send schedule-gap notifications: {exc}")
+
     return new_trips
 
 async def check_driver_fatigue(driver_id: int, db: AsyncSession) -> float:
@@ -282,26 +318,46 @@ async def trigger_auto_dispatch(trip_id: int, db: AsyncSession) -> bool:
     """
     Finds an available driver and vehicle to dispatch for an overloaded route.
     Returns True if successful, False if no resources available.
+
+    Driver-selection priority (each candidate is also gated by fatigue_score <= 80):
+      1. ACTIVE  drivers assigned as DRIVER_3 today
+      2. ON_BREAK drivers assigned as DRIVER_3 today
+      3. Any ACTIVE  driver rostered today (regardless of position)
+      4. Any ON_BREAK driver rostered today (regardless of position)
     """
     trip = await db.scalar(select(Trip).where(Trip.id == trip_id))
     if not trip:
         return False
-        
-    # C3: Only dispatch ACTIVE drivers who are assigned as DRIVER_3 today
-    # Use row-level locking to prevent race conditions
+
     today = datetime.now(timezone.utc).date()
-    driver = await db.scalar(
-        select(Driver)
-        .join(RotationAssignment, Driver.id == RotationAssignment.driver_id)
-        .where(
-            Driver.status == DriverStatus.ACTIVE,
-            RotationAssignment.shift_date == today,
-            RotationAssignment.position == RotationPosition.DRIVER_3
+
+    async def _pick(status_value: DriverStatus, only_d3: bool) -> Optional[Driver]:
+        stmt = (
+            select(Driver)
+            .join(RotationAssignment, Driver.id == RotationAssignment.driver_id)
+            .where(
+                Driver.status == status_value,
+                RotationAssignment.shift_date == today,
+                Driver.id != trip.driver_id,  # never relieve the overloaded trip with its own driver
+            )
         )
-        .limit(1).with_for_update()
+        if only_d3:
+            stmt = stmt.where(RotationAssignment.position == RotationPosition.DRIVER_3)
+        # Fatigue gate (GAP-05): only dispatch drivers below the fatigue ceiling.
+        stmt = stmt.where(Driver.fatigue_score <= 80.0)
+        return await db.scalar(stmt.limit(1).with_for_update())
+
+    driver = (
+        await _pick(DriverStatus.ACTIVE,   only_d3=True)
+        or await _pick(DriverStatus.ON_BREAK, only_d3=True)
+        or await _pick(DriverStatus.ACTIVE,   only_d3=False)
+        or await _pick(DriverStatus.ON_BREAK, only_d3=False)
     )
     if not driver:
-        logger.warning(f"Auto-dispatch failed for trip {trip_id}: No available D3 drivers.")
+        logger.warning(
+            f"Auto-dispatch failed for trip {trip_id}: no rested driver available "
+            f"(checked D3 ACTIVE, D3 ON_BREAK, any ACTIVE, any ON_BREAK; fatigue_score<=80)."
+        )
         return False
         
     # Find a free vehicle with row-level locking

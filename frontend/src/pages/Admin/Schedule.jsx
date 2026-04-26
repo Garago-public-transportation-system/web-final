@@ -4,6 +4,7 @@ import api from '../../api/axios';
 import { PageHeader, Filterbar, Panel, Stat, Tag, LoadingState, Empty } from '../../garago/Shell';
 import Icon from '../../garago/Icon';
 import { useAlertStore } from '../../store/alertStore';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const DAYS_LABEL = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -25,6 +26,7 @@ const fmtDateISO = (d) => {
 };
 
 const Schedule = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const addAlert = useAlertStore((s) => s.addAlert);
     const [tab, setTab] = useState('ROSTER');
@@ -62,11 +64,11 @@ const Schedule = () => {
             const res = await api.get('/admin/trips');
             setTrips(res.data || []);
         } catch {
-            addAlert?.({ type: 'ERROR', message: 'Failed to fetch trips.' });
+            addAlert?.({ type: 'ERROR', message: t('schedule.failedFetchTrips') });
         } finally {
             setTripsLoading(false);
         }
-    }, [addAlert]);
+    }, [addAlert, t]);
 
     const fetchRoster = useCallback(async () => {
         setRotationLoading(true);
@@ -83,17 +85,17 @@ const Schedule = () => {
             setRotations(rot.data || []);
             setDrivers(drv.data || []);
         } catch {
-            addAlert?.({ type: 'ERROR', message: 'Failed to load roster.' });
+            addAlert?.({ type: 'ERROR', message: t('schedule.failedRoster') });
         } finally {
             setRotationLoading(false);
         }
-    }, [weekDays, addAlert]);
+    }, [weekDays, addAlert, t]);
 
     useEffect(() => { fetchTrips(); }, [fetchTrips]);
     useEffect(() => { fetchRoster(); }, [fetchRoster]);
 
     const generate = async (regenerate) => {
-        if (regenerate && !window.confirm('This will delete the current schedule and create a new one. Continue?')) {
+        if (regenerate && !window.confirm(t('schedule.regenerateConfirm'))) {
             return;
         }
         setBusy(true);
@@ -101,14 +103,14 @@ const Schedule = () => {
             const res = await api.post(`/admin/rotations/generate?regenerate=${regenerate}`);
             const { message, count } = res.data || {};
             if (count === 0) {
-                addAlert?.({ type: 'WARN', message: message || 'No rotations generated.' });
+                addAlert?.({ type: 'WARN', message: message || t('schedule.noRotationsGenerated') });
             } else {
-                addAlert?.({ type: 'OK', message: message || 'Schedule generated.' });
+                addAlert?.({ type: 'OK', message: message || t('schedule.scheduleGenerated') });
             }
             await fetchTrips();
             await fetchRoster();
         } catch (err) {
-            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || 'Generation failed.' });
+            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || t('schedule.generationFailed') });
         } finally {
             setBusy(false);
         }
@@ -197,15 +199,15 @@ const Schedule = () => {
     return (
         <>
             <PageHeader
-                title="Schedule"
-                sub={tab === 'ROSTER' ? `Week of ${rangeLabel}` : `${trips.length} trips · ${todayLabel}`}
+                title={t('schedule.title')}
+                sub={tab === 'ROSTER' ? `${t('schedule.weeklyRoster')} · ${rangeLabel}` : `${trips.length} · ${todayLabel}`}
                 actions={(
                     <>
                         <button className="btn" onClick={() => generate(true)} disabled={busy}>
-                            <Icon name="reroute" />{busy ? 'Working…' : 'Regenerate'}
+                            <Icon name="reroute" />{busy ? t('shell.working') : t('schedule.regenerate')}
                         </button>
                         <button className="btn primary" onClick={() => generate(false)} disabled={busy}>
-                            <Icon name="plus" />{busy ? 'Working…' : 'Generate safe'}
+                            <Icon name="plus" />{busy ? t('shell.working') : t('schedule.generateSafe')}
                         </button>
                     </>
                 )}
@@ -217,13 +219,13 @@ const Schedule = () => {
                         className={`btn ${tab === 'ROSTER' ? 'primary' : ''}`}
                         onClick={() => setTab('ROSTER')}
                     >
-                        Weekly roster
+                        {t('schedule.weeklyRoster')}
                     </button>
                     <button
                         className={`btn ${tab === 'TRIPS' ? 'primary' : ''}`}
                         onClick={() => setTab('TRIPS')}
                     >
-                        Today's trips
+                        {t('schedule.todaysTrips')}
                     </button>
                 </div>
                 {tab === 'ROSTER' ? (
@@ -233,19 +235,19 @@ const Schedule = () => {
                             className={`btn ${weekRel === 'PAST' ? 'primary' : ''}`}
                             onClick={() => shiftWeek(-1)}
                         >
-                            <Icon name="arrow-left" />Prev week
+                            <Icon name="arrow-left" />{t('schedule.prevWeek')}
                         </button>
                         <button
                             className={`btn ${weekRel === 'CURRENT' ? 'primary' : ''}`}
                             onClick={() => setWeekStart(startOfWeek(new Date()))}
                         >
-                            This week
+                            {t('schedule.thisWeek')}
                         </button>
                         <button
                             className={`btn ${weekRel === 'FUTURE' ? 'primary' : ''}`}
                             onClick={() => shiftWeek(1)}
                         >
-                            Next week<Icon name="arrow-right" />
+                            {t('schedule.nextWeek')}<Icon name="arrow-right" />
                         </button>
                         <span className="mono text-xs muted" style={{ marginInlineStart: 'auto' }}>
                             {rangeLabel}
@@ -258,25 +260,25 @@ const Schedule = () => {
                 {tab === 'ROSTER' ? (
                     <>
                         <div className="grid-4 mb-4">
-                            <Stat label="Drivers rostered" value={rotationLoading ? '—' : String(totals.drivers)} />
+                            <Stat label={t('schedule.driversRostered')} value={rotationLoading ? '—' : String(totals.drivers)} />
                             <Stat
-                                label="Shifts filled"
+                                label={t('schedule.shiftsFilled')}
                                 value={rotationLoading
                                     ? '—'
                                     : `${totals.filled} / ${totals.capacity || 0}`}
                             />
                             <Stat
-                                label="Total shift assignments"
+                                label={t('schedule.totalShifts')}
                                 value={rotationLoading ? '—' : String(totals.totalShifts)}
                             />
                             <Stat
-                                label="Unfilled day-slots"
+                                label={t('schedule.unfilled')}
                                 value={rotationLoading ? '—' : String(Math.max(totals.unfilled, 0))}
                             />
                         </div>
 
                         <Panel
-                            title="Roster"
+                            title={t('schedule.roster')}
                             action={(
                                 <span className="mono text-xs muted" style={{ letterSpacing: '.04em' }}>
                                     <span
@@ -289,7 +291,7 @@ const Schedule = () => {
                                             verticalAlign: 'middle',
                                         }}
                                     />
-                                    Morning
+                                    {t('schedule.morning')}
                                     <span
                                         style={{
                                             display: 'inline-block',
@@ -301,7 +303,7 @@ const Schedule = () => {
                                             verticalAlign: 'middle',
                                         }}
                                     />
-                                    Evening
+                                    {t('schedule.evening')}
                                     <span
                                         style={{
                                             display: 'inline-block',
@@ -313,7 +315,7 @@ const Schedule = () => {
                                             verticalAlign: 'middle',
                                         }}
                                     />
-                                    Double
+                                    {t('schedule.double')}
                                 </span>
                             )}
                             flush
@@ -323,14 +325,14 @@ const Schedule = () => {
                             ) : matrix.length === 0 ? (
                                 <div style={{ padding: 28 }}>
                                     <Empty>
-                                        No rotations for this week. Use “Generate safe” to build the schedule.
+                                        {t('schedule.noRotationsThisWeek')}
                                     </Empty>
                                 </div>
                             ) : (
                                 <table className="tbl">
                                     <thead>
                                         <tr>
-                                            <th style={{ minWidth: 180 }}>Driver</th>
+                                            <th style={{ minWidth: 180 }}>{t('shell.driver')}</th>
                                             {weekDays.map((d, i) => (
                                                 <th key={i} style={{ textAlign: 'center' }}>
                                                     <div style={{ fontSize: 11, fontWeight: 600 }}>{DAYS_LABEL[i]}</div>
@@ -342,7 +344,7 @@ const Schedule = () => {
                                                     </div>
                                                 </th>
                                             ))}
-                                            <th className="num" style={{ width: 70 }}>Hours</th>
+                                            <th className="num" style={{ width: 70 }}>{t('schedule.hours')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -386,23 +388,23 @@ const Schedule = () => {
                         </Panel>
                     </>
                 ) : (
-                    <Panel title="Today's trips" flush>
+                    <Panel title={t('schedule.todaysTrips')} flush>
                         {tripsLoading ? (
                             <LoadingState />
                         ) : trips.length === 0 ? (
-                            <div style={{ padding: 28 }}><Empty>No trips generated for today.</Empty></div>
+                            <div style={{ padding: 28 }}><Empty>{t('schedule.noTripsToday')}</Empty></div>
                         ) : (
                             <table className="tbl">
                                 <thead>
                                     <tr>
-                                        <th style={{ width: 90 }}>Trip #</th>
-                                        <th>Route</th>
-                                        <th className="num">Start</th>
-                                        <th className="num">End</th>
-                                        <th>Driver</th>
-                                        <th>Vehicle</th>
-                                        <th>Status</th>
-                                        <th style={{ width: 110 }}>Action</th>
+                                        <th style={{ width: 90 }}>{t('schedule.tripNumber')}</th>
+                                        <th>{t('shell.route')}</th>
+                                        <th className="num">{t('shell.start')}</th>
+                                        <th className="num">{t('shell.end')}</th>
+                                        <th>{t('shell.driver')}</th>
+                                        <th>{t('shell.vehicle')}</th>
+                                        <th>{t('common.status')}</th>
+                                        <th style={{ width: 110 }}>{t('shell.actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -441,7 +443,7 @@ const Schedule = () => {
                                                     className="btn ghost"
                                                     onClick={() => navigate(`/admin/trips/${trip.id}`)}
                                                 >
-                                                    Details
+                                                    {t('shell.details')}
                                                 </button>
                                             </td>
                                         </tr>

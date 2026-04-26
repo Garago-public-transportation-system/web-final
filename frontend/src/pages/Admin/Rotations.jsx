@@ -3,6 +3,7 @@ import api from '../../api/axios';
 import { PageHeader, Filterbar, Panel, Tag, LoadingState, Empty } from '../../garago/Shell';
 import Icon from '../../garago/Icon';
 import { useAlertStore } from '../../store/alertStore';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const SHIFT_TYPES = ['MORNING', 'EVENING'];
 const POSITIONS = ['DRIVER_1', 'DRIVER_2', 'DRIVER_3'];
@@ -10,6 +11,7 @@ const POSITIONS = ['DRIVER_1', 'DRIVER_2', 'DRIVER_3'];
 const todayStr = () => new Date().toISOString().split('T')[0];
 
 const Rotations = () => {
+    const { t } = useTranslation();
     const addAlert = useAlertStore((s) => s.addAlert);
     const [assignments, setAssignments] = useState([]);
     const [routes, setRoutes] = useState([]);
@@ -44,11 +46,11 @@ const Rotations = () => {
             setDrivers(d.data || []);
             setVehicles(v.data || []);
         } catch {
-            addAlert?.({ type: 'ERROR', message: 'Failed to load rotations.' });
+            addAlert?.({ type: 'ERROR', message: t('rotations.failedLoad') });
         } finally {
             setLoading(false);
         }
-    }, [addAlert]);
+    }, [addAlert, t]);
 
     useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -92,7 +94,7 @@ const Rotations = () => {
 
     const submit = async () => {
         if (!form.route_id || !form.driver_id || !form.vehicle_id) {
-            addAlert?.({ type: 'WARN', message: 'Pick route, driver and vehicle.' });
+            addAlert?.({ type: 'WARN', message: t('rotations.pickAll') });
             return;
         }
         setSaving(true);
@@ -103,11 +105,11 @@ const Rotations = () => {
                 driver_id: Number(form.driver_id),
                 vehicle_id: Number(form.vehicle_id),
             });
-            addAlert?.({ type: 'OK', message: 'Rotation assigned.' });
+            addAlert?.({ type: 'OK', message: t('rotations.assigned') });
             setOpen(false);
             fetchAll();
         } catch (err) {
-            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || 'Assignment failed.' });
+            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || t('rotations.assignFailed') });
         } finally {
             setSaving(false);
         }
@@ -116,11 +118,11 @@ const Rotations = () => {
     return (
         <>
             <PageHeader
-                title="Rotations"
-                sub={`${assignments.length} assignments · ${todayStr()}`}
+                title={t('sidebar.rotations')}
+                sub={`${assignments.length} ${t('rotations.assignments')} · ${todayStr()}`}
                 actions={(
                     <button className="btn primary" onClick={openCreate}>
-                        <Icon name="plus" />Assign driver
+                        <Icon name="plus" />{t('rotations.assignDriver')}
                     </button>
                 )}
             />
@@ -132,12 +134,16 @@ const Rotations = () => {
                             className={`btn ${shiftFilter === s ? 'primary' : ''}`}
                             onClick={() => setShiftFilter(s)}
                         >
-                            {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
+                            {s === 'ALL'
+                                ? t('rotations.all')
+                                : s === 'MORNING'
+                                ? t('schedule.morning')
+                                : t('schedule.evening')}
                         </button>
                     ))}
                 </div>
                 <div className="sep" />
-                <span className="mono text-xs muted">{filtered.length} results</span>
+                <span className="mono text-xs muted">{filtered.length} {t('shell.results')}</span>
             </Filterbar>
 
             <div className="main-body">
@@ -145,19 +151,19 @@ const Rotations = () => {
                     {loading ? (
                         <LoadingState />
                     ) : filtered.length === 0 ? (
-                        <div style={{ padding: 28 }}><Empty>No rotation assignments.</Empty></div>
+                        <div style={{ padding: 28 }}><Empty>{t('rotations.noAssignments')}</Empty></div>
                     ) : (
                         <table className="tbl">
                             <thead>
                                 <tr>
-                                    <th style={{ width: 60 }}>ID</th>
-                                    <th>Route</th>
-                                    <th>Shift</th>
-                                    <th>Position</th>
-                                    <th>Driver</th>
-                                    <th>Vehicle</th>
-                                    <th className="num">Start</th>
-                                    <th className="num">End</th>
+                                    <th style={{ width: 60 }}>{t('common.id')}</th>
+                                    <th>{t('rotations.route')}</th>
+                                    <th>{t('rotations.shift')}</th>
+                                    <th>{t('rotations.position')}</th>
+                                    <th>{t('shell.driver')}</th>
+                                    <th>{t('shell.vehicle')}</th>
+                                    <th className="num">{t('shell.start')}</th>
+                                    <th className="num">{t('shell.end')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -209,30 +215,30 @@ const Rotations = () => {
                 <ModalOverlay onClose={() => setOpen(false)}>
                     <div className="panel" style={{ width: 540 }}>
                         <div className="panel-head">
-                            <strong>Assign rotation</strong>
+                            <strong>{t('rotations.assignTitle')}</strong>
                             <button className="btn ghost" onClick={() => setOpen(false)}>
                                 <Icon name="x" />
                             </button>
                         </div>
                         <div className="panel-body">
                             <div className="grid-2" style={{ gap: 12 }}>
-                                <Field label="Route">
+                                <Field label={t('rotations.route')}>
                                     <select
                                         value={form.route_id}
                                         onChange={(e) => setForm({ ...form, route_id: e.target.value })}
                                     >
-                                        <option value="">Select route…</option>
+                                        <option value="">{t('rotations.selectRoute')}</option>
                                         {routes.map((r) => (
                                             <option key={r.id} value={r.id}>{r.name}</option>
                                         ))}
                                     </select>
                                 </Field>
-                                <Field label="Driver">
+                                <Field label={t('shell.driver')}>
                                     <select
                                         value={form.driver_id}
                                         onChange={(e) => setForm({ ...form, driver_id: e.target.value })}
                                     >
-                                        <option value="">Select driver…</option>
+                                        <option value="">{t('rotations.selectDriver')}</option>
                                         {drivers.map((d) => (
                                             <option key={d.id} value={d.id}>
                                                 {d.user?.full_name || `D-${d.id}`}
@@ -240,18 +246,18 @@ const Rotations = () => {
                                         ))}
                                     </select>
                                 </Field>
-                                <Field label="Vehicle">
+                                <Field label={t('shell.vehicle')}>
                                     <select
                                         value={form.vehicle_id}
                                         onChange={(e) => setForm({ ...form, vehicle_id: e.target.value })}
                                     >
-                                        <option value="">Select vehicle…</option>
+                                        <option value="">{t('rotations.selectVehicle')}</option>
                                         {vehicles.map((v) => (
                                             <option key={v.id} value={v.id}>{v.plate_number}</option>
                                         ))}
                                     </select>
                                 </Field>
-                                <Field label="Shift">
+                                <Field label={t('rotations.shift')}>
                                     <select
                                         value={form.shift_type}
                                         onChange={(e) => setForm({ ...form, shift_type: e.target.value })}
@@ -261,7 +267,7 @@ const Rotations = () => {
                                         ))}
                                     </select>
                                 </Field>
-                                <Field label="Position">
+                                <Field label={t('rotations.position')}>
                                     <select
                                         value={form.position}
                                         onChange={(e) => setForm({ ...form, position: e.target.value })}
@@ -271,7 +277,7 @@ const Rotations = () => {
                                         ))}
                                     </select>
                                 </Field>
-                                <Field label="Date">
+                                <Field label={t('rotations.date')}>
                                     <input
                                         type="date"
                                         value={form.shift_date}
@@ -297,9 +303,9 @@ const Rotations = () => {
                                 justifyContent: 'flex-end',
                             }}
                         >
-                            <button className="btn" onClick={() => setOpen(false)}>Cancel</button>
+                            <button className="btn" onClick={() => setOpen(false)}>{t('common.cancel')}</button>
                             <button className="btn primary" onClick={submit} disabled={saving}>
-                                {saving ? 'Saving…' : 'Assign'}
+                                {saving ? t('shell.saving') : t('rotations.assignDriver')}
                             </button>
                         </div>
                     </div>

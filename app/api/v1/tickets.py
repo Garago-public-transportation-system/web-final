@@ -116,3 +116,98 @@ async def validate_ticket(
 async def read_tickets(db: Annotated[AsyncSession, Depends(get_db)], skip: int = 0, limit: int = 100):
     result = await db.execute(select(Ticket).offset(skip).limit(limit))
     return result.scalars().all()
+
+
+@router.get("/export")
+async def export_tickets(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    format: str = "csv",
+    status_filter: Optional[str] = None,
+):
+    """Export tickets as CSV or PDF. Supports an optional status filter (ISSUED/USED/CANCELLED/...)."""
+    from fastapi.responses import StreamingResponse
+    import io
+    import csv as csv_module
+
+    stmt = select(Ticket).order_by(Ticket.purchase_time.desc())
+    if status_filter and status_filter.upper() != "ALL":
+        stmt = stmt.where(Ticket.status == status_filter.upper())
+
+    rows = (await db.execute(stmt)).scalars().all()
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M")
+
+    if format.lower() == "pdf":
+        try:
+            from reportlab.lib.pagesizes import A4, landscape
+            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+            from reportlab.lib.styles import getSampleStyleSheet
+            from reportlab.lib import colors
+        except ImportError:
+            raise HTTPException(
+                status_code=500,
+                detail="reportlab is not installed. Run: pip install reportlab",
+            )
+
+        buf = io.BytesIO()
+        doc = SimpleDocTemplate(buf, pagesize=landscape(A4))
+        styles = getSampleStyleSheet()
+        elements = [
+            Paragraph(
+                f"Tickets — {status_filter or 'ALL'} ({len(rows)} rows)",
+                styles["Title"],
+            ),
+            Spacer(1, 12),
+        ]
+        table_data = [["ID", "Code", "Trip", "Passenger", "Seat", "Status", "Price", "Purchased"]]
+        for t in rows:
+            table_data.append([
+                t.id,
+                t.ticket_code or "",
+                t.trip_id,
+                t.passenger_name or "",
+                t.seat_number or "",
+                t.status,
+                f"{(t.price or 0):.2f}",
+                t.purchase_time.strftime("%Y-%m-%d %H:%M") if t.purchase_time else "",
+            ])
+        table = Table(table_data, repeatRows=1)
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2d2b26")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f3ee")]),
+            ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#d8d6cf")),
+            ("PADDING", (0, 0), (-1, -1), 5),
+        ]))
+        elements.append(table)
+        doc.build(elements)
+        buf.seek(0)
+        return StreamingResponse(
+            buf,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=tickets_{timestamp}.pdf"},
+        )
+
+    # Default CSV
+    buf = io.StringIO()
+    writer = csv_module.writer(buf)
+    writer.writerow(["ID", "Code", "Trip", "Passenger", "Seat", "Status", "Price", "Purchased", "Validated"])
+    for t in rows:
+        writer.writerow([
+            t.id,
+            t.ticket_code or "",
+            t.trip_id,
+            t.passenger_name or "",
+            t.seat_number or "",
+            t.status,
+            f"{(t.price or 0):.2f}",
+            t.purchase_time.strftime("%Y-%m-%d %H:%M") if t.purchase_time else "",
+            t.validation_time.strftime("%Y-%m-%d %H:%M") if t.validation_time else "",
+        ])
+    buf.seek(0)
+    return StreamingResponse(
+        io.BytesIO(buf.getvalue().encode()),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=tickets_{timestamp}.csv"},
+    )

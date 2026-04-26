@@ -102,6 +102,8 @@ async def ingest_anpr(request: Request, data: ANPRData, db: Annotated[AsyncSessi
     vehicle = None
     match_method = "none"
 
+    # OCR confidence boundary: [0.60, 1.0] makes an active GRANT/DENY decision.
+    # Confidence == 0.60 is included (NOT IGNORED). Below 0.60 → IGNORED.
     if data.confidence < 0.60:
         logger.info(
             f"[GATE {data.gate_id}] DECISION: IGNORED (confidence {data.confidence:.2f} below 0.60)"
@@ -148,7 +150,7 @@ async def ingest_camera(request: Request, data: CameraData, db: Annotated[AsyncS
     from app.models.models import Trip
     from app.services.rotation_service import trigger_auto_dispatch
     from app.core.sockets import manager
-    from sqlalchemy import select
+    from sqlalchemy import select, func
 
     passenger_count = max(0, int(data.passenger_count))
     logger.info(f"[CAMERA] trip={data.trip_id} passenger_count={passenger_count}")
@@ -182,21 +184,38 @@ async def ingest_camera(request: Request, data: CameraData, db: Annotated[AsyncS
         crowding_score=crowding_score,
     ))
 
+    # GAP-02: de-dup auto-dispatch and CrowdingEvent rows per trip so a flood
+    # of camera POSTs for the same trip can't create N events / N dispatches.
+    already_dispatched = await db.scalar(
+        select(func.count()).select_from(CrowdingEvent).where(
+            CrowdingEvent.trip_id == trip.id,
+            CrowdingEvent.auto_dispatch_triggered == True,  # noqa: E712
+        )
+    ) or 0
+
     auto_dispatched = False
-    if trip.is_crowded:
+    if trip.is_crowded and not already_dispatched:
         try:
             auto_dispatched = await trigger_auto_dispatch(trip.id, db)
         except Exception as exc:  # auto-dispatch failure must not lose the reading
             logger.exception(f"[CAMERA] auto-dispatch for trip={trip.id} failed: {exc}")
 
     if crowding_score >= 0.70:
-        db.add(CrowdingEvent(
-            trip_id=trip.id,
-            vehicle_id=vehicle.id,
-            crowding_score=crowding_score,
-            passenger_count=passenger_count,
-            auto_dispatch_triggered=auto_dispatched,
-        ))
+        # Only persist a new CrowdingEvent when the trip's crowding state is
+        # newly elevated, OR this is the first successful dispatch for the trip.
+        existing_for_trip = await db.scalar(
+            select(func.count()).select_from(CrowdingEvent).where(
+                CrowdingEvent.trip_id == trip.id,
+            )
+        ) or 0
+        if existing_for_trip == 0 or auto_dispatched:
+            db.add(CrowdingEvent(
+                trip_id=trip.id,
+                vehicle_id=vehicle.id,
+                crowding_score=crowding_score,
+                passenger_count=passenger_count,
+                auto_dispatch_triggered=auto_dispatched,
+            ))
 
     await db.commit()
 
@@ -300,6 +319,8 @@ async def upload_raw_image(
     vehicle = None
     match_method = "none"
 
+    # OCR confidence boundary: [0.60, 1.0] makes an active GRANT/DENY decision.
+    # Confidence == 0.60 is included (NOT IGNORED). Below 0.60 → IGNORED.
     if ocr_confidence < 0.60:
         logger.info(
             f"[GATE {gate_id}] DECISION: IGNORED (confidence {ocr_confidence:.2f} below 0.60)"

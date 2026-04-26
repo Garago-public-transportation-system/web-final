@@ -358,6 +358,19 @@ async def export_report(
             elements.append(Paragraph(f"Report — {range_label}", styles["Title"]))
             elements.append(Spacer(1, 12))
 
+            if not rows:
+                elements.append(Paragraph(
+                    "No completed trips in the selected date range.",
+                    styles["Normal"],
+                ))
+                doc.build(elements)
+                buf.seek(0)
+                return StreamingResponse(
+                    buf,
+                    media_type="application/pdf",
+                    headers={"Content-Disposition": f"attachment; filename=report_{range_label}.pdf"},
+                )
+
             table_data = [["Trip #", "Route", "Driver", "Vehicle", "Passengers", "Fare", "End Time"]]
             for trip, route, driver, user, vehicle in rows:
                 table_data.append([

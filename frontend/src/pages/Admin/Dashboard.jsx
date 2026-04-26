@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { Stat, Panel, PageHeader, Bar, LoadingState, Empty, Tag } from '../../garago/Shell';
 import Icon from '../../garago/Icon';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const Dashboard = () => {
     const navigate = useNavigate();
+    const { t, language } = useTranslation();
     const [stats, setStats] = useState(null);
     const [audit, setAudit] = useState([]);
     const [trips, setTrips] = useState([]);
@@ -18,30 +20,35 @@ const Dashboard = () => {
         const load = async () => {
             setLoading(true);
             try {
-                const [s, a, t, k] = await Promise.all([
+                const [statsRes, auditRes, tripsRes, ticketsRes] = await Promise.all([
                     api.get('/admin/dashboard/stats'),
                     api.get('/admin/audit-logs').catch(() => ({ data: [] })),
                     api.get('/admin/trips').catch(() => ({ data: [] })),
                     api.get('/admin/tickets/').catch(() => ({ data: [] })),
                 ]);
                 if (cancelled) return;
-                setStats(s.data);
-                setAudit(Array.isArray(a.data) ? a.data.slice(0, 20) : []);
-                setTrips(Array.isArray(t.data) ? t.data : []);
-                setTickets(Array.isArray(k.data) ? k.data : []);
+                setStats(statsRes.data);
+                setAudit(Array.isArray(auditRes.data) ? auditRes.data.slice(0, 20) : []);
+                setTrips(Array.isArray(tripsRes.data) ? tripsRes.data : []);
+                setTickets(Array.isArray(ticketsRes.data) ? ticketsRes.data : []);
             } catch {
-                if (!cancelled) setError('Unable to load dashboard data.');
+                if (!cancelled) setError(t('admin.dash.errorLoad'));
             } finally {
                 if (!cancelled) setLoading(false);
             }
         };
         load();
         return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const today = useMemo(
-        () => new Date().toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short' }),
-        [],
+        () => new Date().toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', {
+            weekday: 'long',
+            day: '2-digit',
+            month: 'short',
+        }),
+        [language],
     );
 
     const tripsPerRoute = stats?.trips_per_route || [];
@@ -93,15 +100,15 @@ const Dashboard = () => {
     return (
         <>
             <PageHeader
-                title="Operations overview"
-                sub={`Today · ${today}`}
+                title={t('admin.dash.title')}
+                sub={`${t('admin.dash.today')} · ${today}`}
                 actions={(
                     <>
                         <button className="btn" onClick={() => navigate('/admin/reports')}>
-                            <Icon name="download" />Reports
+                            <Icon name="download" />{t('admin.dash.reports')}
                         </button>
                         <button className="btn primary" onClick={() => navigate('/admin/schedule')}>
-                            <Icon name="plus" />New shift
+                            <Icon name="plus" />{t('admin.dash.newShift')}
                         </button>
                     </>
                 )}
@@ -118,22 +125,22 @@ const Dashboard = () => {
 
                 <div className="grid-4 mb-4">
                     <Stat
-                        label="Total users"
+                        label={t('admin.dash.totalUsers')}
                         value={loading ? '—' : (stats?.total_users ?? 0).toLocaleString()}
                         onClick={() => navigate('/admin/users')}
                     />
                     <Stat
-                        label="On-duty drivers"
+                        label={t('admin.dash.onDutyDrivers')}
                         value={loading ? '—' : (stats?.total_drivers ?? 0).toLocaleString()}
                         onClick={() => navigate('/admin/drivers')}
                     />
                     <Stat
-                        label="Active vehicles"
+                        label={t('admin.dash.activeVehicles')}
                         value={loading ? '—' : (stats?.total_vehicles ?? 0).toLocaleString()}
                         onClick={() => navigate('/admin/vehicles')}
                     />
                     <Stat
-                        label="Active trips"
+                        label={t('admin.dash.activeTrips')}
                         value={loading ? '—' : (stats?.active_trips ?? 0).toLocaleString()}
                         spark={tripsSpark}
                         onClick={() => navigate('/admin/schedule')}
@@ -141,14 +148,14 @@ const Dashboard = () => {
                 </div>
 
                 <Panel
-                    title="System alerts"
+                    title={t('admin.dash.systemAlerts')}
                     action={(
                         <a
                             className="mono text-xs"
                             onClick={() => navigate('/admin/audit-logs')}
                             style={{ cursor: 'pointer' }}
                         >
-                            view all →
+                            {t('admin.dash.viewAll')}
                         </a>
                     )}
                     flush
@@ -157,7 +164,7 @@ const Dashboard = () => {
                         {loading ? (
                             <LoadingState />
                         ) : audit.length === 0 ? (
-                            <div style={{ padding: 28 }}><Empty>No recent activity</Empty></div>
+                            <div style={{ padding: 28 }}><Empty>{t('admin.dash.noActivity')}</Empty></div>
                         ) : (
                             <div
                                 style={{
@@ -175,28 +182,29 @@ const Dashboard = () => {
 
                 <div className="grid-3 mb-4">
                     <Panel
-                        title="Ridership · hourly"
-                        action={<span className="mono text-xs muted">00:00 – 23:00 · today</span>}
+                        title={t('admin.dash.ridership')}
+                        action={<span className="mono text-xs muted">00:00 – 23:00 · {t('admin.dash.today')}</span>}
                     >
                         <Heatstrip
                             data={hourlyRidership}
                             loading={loading}
                             activeTrips={stats?.active_trips ?? 0}
+                            t={t}
                         />
                     </Panel>
                     <Panel
-                        title="Trips per route"
-                        action={<span className="mono text-xs muted">share</span>}
+                        title={t('admin.dash.tripsPerRoute')}
+                        action={<span className="mono text-xs muted">{t('admin.dash.share')}</span>}
                     >
                         {loading ? (
                             <LoadingState />
                         ) : tripsPerRoute.length === 0 ? (
-                            <Empty>No trip data yet</Empty>
+                            <Empty>{t('admin.dash.noRoutesData')}</Empty>
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                                 {tripsPerRoute.slice(0, 6).map((r, i) => {
                                     const share = totalRouteTrips ? r.trips / totalRouteTrips : 0;
-                                    const kind = share >= 0.3 ? 'warn' : share >= 0.45 ? 'crit' : 'ok';
+                                    const kind = share >= 0.45 ? 'crit' : share >= 0.30 ? 'warn' : 'ok';
                                     return (
                                         <div key={`${r.name}-${i}`}>
                                             <div className="flex justify-between text-sm mb-2">
@@ -213,65 +221,12 @@ const Dashboard = () => {
                         )}
                     </Panel>
                     <Panel
-                        title="Ticket status"
-                        action={<span className="mono text-xs muted">today</span>}
+                        title={t('admin.dash.ticketStatus')}
+                        action={<span className="mono text-xs muted">{t('admin.dash.today')}</span>}
                     >
-                        <TicketStatusBreakdown data={ticketStatus} loading={loading} />
+                        <TicketStatusBreakdown data={ticketStatus} loading={loading} t={t} />
                     </Panel>
                 </div>
-
-                <Panel
-                    title="Activity stream"
-                    action={<span className="mono text-xs muted">last {audit.length} events</span>}
-                    flush
-                >
-                    {loading ? (
-                        <LoadingState />
-                    ) : audit.length === 0 ? (
-                        <div style={{ padding: 28 }}><Empty>No recent activity.</Empty></div>
-                    ) : (
-                        <div style={{ maxHeight: 320, overflowY: 'auto' }}>
-                            <table className="tbl">
-                                <thead>
-                                    <tr>
-                                        <th style={{ width: 90 }}>Time</th>
-                                        <th>Action</th>
-                                        <th>Target</th>
-                                        <th>Actor</th>
-                                        <th style={{ width: 100 }}>Result</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {audit.map((a) => {
-                                        const at = a.timestamp
-                                            ? new Date(a.timestamp).toLocaleTimeString('en-GB', {
-                                                  hour: '2-digit', minute: '2-digit', second: '2-digit',
-                                              })
-                                            : '—';
-                                        const kind = a.action?.includes('DELETE') || a.action?.includes('REJECT')
-                                            ? 'CRIT'
-                                            : a.action?.includes('CREATE') || a.action?.includes('APPROVE')
-                                                ? 'OK'
-                                                : 'WARN';
-                                        return (
-                                            <tr key={a.id}>
-                                                <td className="mono text-xs">{at}</td>
-                                                <td className="mono text-xs">{a.action || '—'}</td>
-                                                <td className="mono text-xs">
-                                                    {a.target_type
-                                                        ? `${a.target_type}${a.target_id != null ? `#${a.target_id}` : ''}`
-                                                        : '—'}
-                                                </td>
-                                                <td className="text-sm">{a.actor_email || 'system'}</td>
-                                                <td><Tag status={kind} /></td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </Panel>
             </div>
         </>
     );
@@ -280,25 +235,25 @@ const Dashboard = () => {
 const SEVERITY = {
     crit: {
         bar: 'var(--crit)',
-        bg: 'color-mix(in oklab, var(--crit) 8%, transparent)',
-        chipBg: 'color-mix(in oklab, var(--crit) 18%, transparent)',
-        chipFg: 'var(--crit)',
+        bg: 'color-mix(in oklab, var(--crit) 14%, transparent)',
+        chipBg: 'var(--crit)',
+        chipFg: 'var(--bg)',
         label: 'CRITICAL',
-        icon: 'alert-octagon',
+        icon: 'shield',
     },
     warn: {
         bar: 'var(--warn)',
-        bg: 'color-mix(in oklab, var(--warn) 8%, transparent)',
-        chipBg: 'color-mix(in oklab, var(--warn) 22%, transparent)',
-        chipFg: 'var(--warn)',
+        bg: 'color-mix(in oklab, var(--warn) 14%, transparent)',
+        chipBg: 'var(--warn)',
+        chipFg: 'var(--ink)',
         label: 'WARN',
-        icon: 'alert-triangle',
+        icon: 'flash',
     },
     ok: {
         bar: 'var(--ok)',
-        bg: 'color-mix(in oklab, var(--ok) 7%, transparent)',
-        chipBg: 'color-mix(in oklab, var(--ok) 20%, transparent)',
-        chipFg: 'var(--ok)',
+        bg: 'color-mix(in oklab, var(--ok) 12%, transparent)',
+        chipBg: 'var(--ok)',
+        chipFg: 'var(--bg)',
         label: 'OK',
         icon: 'check',
     },
@@ -321,7 +276,7 @@ const AlertRow = ({ a }) => {
         <div
             style={{
                 position: 'relative',
-                padding: '14px 16px 14px 22px',
+                padding: '14px 16px 14px 24px',
                 borderBottom: '1px solid var(--line-soft)',
                 background: cfg.bg,
                 display: 'flex',
@@ -332,26 +287,30 @@ const AlertRow = ({ a }) => {
             <span
                 style={{
                     position: 'absolute',
-                    left: 0,
+                    insetInlineStart: 0,
                     top: 0,
                     bottom: 0,
-                    width: 4,
+                    width: 6,
                     background: cfg.bar,
                 }}
             />
             <span
                 style={{
                     flexShrink: 0,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
                     fontSize: 9.5,
                     fontFamily: 'JetBrains Mono, monospace',
                     fontWeight: 700,
                     letterSpacing: '.08em',
-                    padding: '3px 7px',
+                    padding: '4px 8px',
                     background: cfg.chipBg,
                     color: cfg.chipFg,
                     borderRadius: 2,
                 }}
             >
+                <Icon name={cfg.icon} />
                 {cfg.label}
             </span>
             <div style={{ minWidth: 0, flex: 1 }}>
@@ -379,7 +338,7 @@ const AlertRow = ({ a }) => {
     );
 };
 
-const Heatstrip = ({ data, loading, activeTrips = 0 }) => {
+const Heatstrip = ({ data, loading, activeTrips = 0, t }) => {
     if (loading) return <LoadingState />;
     const { buckets, max, peakIdx, peakValue } = data;
     if (!buckets || buckets.every((v) => v === 0)) {
@@ -390,7 +349,7 @@ const Heatstrip = ({ data, loading, activeTrips = 0 }) => {
                 </Empty>
             );
         }
-        return <Empty>No ridership data for today.</Empty>;
+        return <Empty>{t ? t('admin.dash.noRoutesData') : 'No ridership data for today.'}</Empty>;
     }
     return (
         <div>
@@ -431,17 +390,17 @@ const Heatstrip = ({ data, loading, activeTrips = 0 }) => {
                 ))}
             </div>
             <div className="rule mt-3">
-                Peak · {peakIdx.toString().padStart(2, '0')}:00 · {peakValue} trip{peakValue === 1 ? '' : 's'}
+                {t ? t('admin.dash.peak') : 'Peak'} · {peakIdx.toString().padStart(2, '0')}:00 · {peakValue}
             </div>
         </div>
     );
 };
 
-const TicketStatusBreakdown = ({ data, loading }) => {
+const TicketStatusBreakdown = ({ data, loading, t }) => {
     if (loading) return <LoadingState />;
     const { rows, total } = data;
     if (!total || rows.length === 0) {
-        return <Empty>No tickets yet.</Empty>;
+        return <Empty>{t ? t('admin.dash.noTickets') : 'No tickets yet.'}</Empty>;
     }
     const shades = ['var(--ink)', 'var(--ink-3)', 'var(--ink-5)', 'var(--crit)'];
     return (

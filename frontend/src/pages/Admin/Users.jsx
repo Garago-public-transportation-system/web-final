@@ -3,6 +3,7 @@ import api from '../../api/axios';
 import { PageHeader, Filterbar, Panel, Tag, LoadingState, Empty } from '../../garago/Shell';
 import Icon from '../../garago/Icon';
 import { useAlertStore } from '../../store/alertStore';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const emptyForm = {
     email: '',
@@ -18,17 +19,18 @@ const emptyForm = {
     preferred_language: 'en',
 };
 
-const validatePwd = (pwd) => {
+const validatePwd = (pwd, t) => {
     const errs = [];
-    if (pwd.length < 8) errs.push('At least 8 characters');
-    if (!/[A-Z]/.test(pwd)) errs.push('Uppercase letter');
-    if (!/[a-z]/.test(pwd)) errs.push('Lowercase letter');
-    if (!/\d/.test(pwd)) errs.push('A digit');
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) errs.push('A special character');
+    if (pwd.length < 8) errs.push(t('users.passwordMin'));
+    if (!/[A-Z]/.test(pwd)) errs.push(t('users.passwordUpper'));
+    if (!/[a-z]/.test(pwd)) errs.push(t('users.passwordLower'));
+    if (!/\d/.test(pwd)) errs.push(t('users.passwordDigit'));
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) errs.push(t('users.passwordSpecial'));
     return errs;
 };
 
 const Users = () => {
+    const { t } = useTranslation();
     const addAlert = useAlertStore((s) => s.addAlert);
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -53,7 +55,7 @@ const Users = () => {
                 const res = await api.get('/admin/users');
                 if (!cancelled) setUsers(res.data || []);
             } catch {
-                if (!cancelled) addAlert?.({ type: 'ERROR', message: 'Failed to fetch users.' });
+                if (!cancelled) addAlert?.({ type: 'ERROR', message: t('users.errorFetching') });
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -96,11 +98,11 @@ const Users = () => {
     const submit = async (e) => {
         e.preventDefault();
         const errs = [];
-        if (!editing && !form.password) errs.push('Password is required');
-        if (!editing && form.password) errs.push(...validatePwd(form.password));
-        if (editing && form.password) errs.push(...validatePwd(form.password));
+        if (!editing && !form.password) errs.push(t('users.passwordReq'));
+        if (!editing && form.password) errs.push(...validatePwd(form.password, t));
+        if (editing && form.password) errs.push(...validatePwd(form.password, t));
         if (form.phone_number && (form.phone_number.length < 7 || form.phone_number.length > 15)) {
-            errs.push('Phone must be 7–15 digits');
+            errs.push(t('users.phoneInvalid'));
         }
         if (errs.length) {
             setFormErrors(errs);
@@ -121,7 +123,7 @@ const Users = () => {
                 };
                 if (form.password) payload.password = form.password;
                 await api.put(`/admin/users/${editing.id}`, payload);
-                addAlert?.({ type: 'OK', message: 'User updated.' });
+                addAlert?.({ type: 'OK', message: t('users.userUpdatedShort') });
             } else if (form.role === 'DRIVER') {
                 await api.post('/admin/users/with-driver', {
                     user: {
@@ -138,7 +140,7 @@ const Users = () => {
                         garage_id: form.garage_id ? parseInt(form.garage_id, 10) : null,
                     },
                 });
-                addAlert?.({ type: 'OK', message: 'Driver account created.' });
+                addAlert?.({ type: 'OK', message: t('users.driverCreated') });
             } else {
                 await api.post('/admin/users', {
                     email: form.email,
@@ -147,14 +149,14 @@ const Users = () => {
                     role: form.role,
                     phone: fullPhone,
                 });
-                addAlert?.({ type: 'OK', message: 'User created.' });
+                addAlert?.({ type: 'OK', message: t('users.userCreatedShort') });
             }
             setEditorOpen(false);
             await fetchUsers();
         } catch (err) {
             const detail = err?.response?.data?.detail;
             setFormErrors(
-                Array.isArray(detail) ? detail.map((x) => `${(x.loc || []).join('.')} — ${x.msg}`) : [detail || 'Save failed.']
+                Array.isArray(detail) ? detail.map((x) => `${(x.loc || []).join('.')} — ${x.msg}`) : [detail || t('users.saveFailed')]
             );
         } finally {
             setSubmitting(false);
@@ -162,24 +164,24 @@ const Users = () => {
     };
 
     const doDelete = async (id) => {
-        if (!window.confirm('Deactivate this user?')) return;
+        if (!window.confirm(t('users.deactivateConfirm'))) return;
         try {
             await api.delete(`/admin/users/${id}`);
-            addAlert?.({ type: 'OK', message: 'User deactivated.' });
+            addAlert?.({ type: 'OK', message: t('users.userDeactivatedShort') });
             fetchUsers();
         } catch (err) {
-            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || 'Action failed.' });
+            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || t('users.actionFailed') });
         }
     };
 
     const doActivate = async (id) => {
-        if (!window.confirm('Reactivate this user?')) return;
+        if (!window.confirm(t('users.activateConfirm'))) return;
         try {
             await api.put(`/admin/users/${id}`, { is_active: true });
-            addAlert?.({ type: 'OK', message: 'User activated.' });
+            addAlert?.({ type: 'OK', message: t('users.userActivated') });
             fetchUsers();
         } catch (err) {
-            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || 'Action failed.' });
+            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || t('users.actionFailed') });
         }
     };
 
@@ -200,11 +202,11 @@ const Users = () => {
     return (
         <>
             <PageHeader
-                title="Users"
-                sub={`${users.length} users total`}
+                title={t('sidebar.users')}
+                sub={t('users.totalUsers', { n: users.length })}
                 actions={(
                     <button className="btn primary" onClick={openCreate}>
-                        <Icon name="plus" />Add user
+                        <Icon name="plus" />{t('users.addUserBtn')}
                     </button>
                 )}
             />
@@ -212,21 +214,21 @@ const Users = () => {
                 <div className="field" style={{ minWidth: 260 }}>
                     <Icon name="search" />
                     <input
-                        placeholder="Search by name, email, phone"
+                        placeholder={t('users.searchPh')}
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                     />
                 </div>
                 <div className="field">
                     <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
-                        <option value="ALL">All roles</option>
-                        <option value="ADMIN">Admin</option>
-                        <option value="MANAGER">Manager</option>
-                        <option value="DRIVER">Driver</option>
+                        <option value="ALL">{t('shell.allRoles')}</option>
+                        <option value="ADMIN">{t('users.roleAdmin')}</option>
+                        <option value="MANAGER">{t('users.roleManager')}</option>
+                        <option value="DRIVER">{t('users.roleDriver')}</option>
                     </select>
                 </div>
                 <div className="sep" />
-                <span className="mono text-xs muted">{filtered.length} results</span>
+                <span className="mono text-xs muted">{filtered.length} {t('shell.results')}</span>
             </Filterbar>
 
             <div className="main-body">
@@ -234,18 +236,18 @@ const Users = () => {
                     {loading ? (
                         <LoadingState />
                     ) : filtered.length === 0 ? (
-                        <div style={{ padding: 28 }}><Empty>No users match.</Empty></div>
+                        <div style={{ padding: 28 }}><Empty>{t('users.noUsersMatch')}</Empty></div>
                     ) : (
                         <table className="tbl">
                             <thead>
                                 <tr>
-                                    <th style={{ width: 60 }}>ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Phone</th>
-                                    <th>Status</th>
-                                    <th style={{ width: 160 }}>Actions</th>
+                                    <th style={{ width: 60 }}>{t('common.id')}</th>
+                                    <th>{t('users.fullName')}</th>
+                                    <th>{t('users.email')}</th>
+                                    <th>{t('users.role')}</th>
+                                    <th>{t('users.phone')}</th>
+                                    <th>{t('common.status')}</th>
+                                    <th style={{ width: 160 }}>{t('shell.actions')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -259,14 +261,14 @@ const Users = () => {
                                         <td>{u.is_active ? <Tag status="ACTIVE" /> : <Tag status="INACTIVE" />}</td>
                                         <td>
                                             <div style={{ display: 'flex', gap: 6 }}>
-                                                <button className="btn ghost" onClick={() => openEdit(u)}>Edit</button>
+                                                <button className="btn ghost" onClick={() => openEdit(u)}>{t('common.edit')}</button>
                                                 {u.is_active === false ? (
                                                     <button
                                                         className="btn"
                                                         style={{ color: 'var(--ok)' }}
                                                         onClick={() => doActivate(u.id)}
                                                     >
-                                                        Activate
+                                                        {t('common.activate')}
                                                     </button>
                                                 ) : (
                                                     <button
@@ -274,7 +276,7 @@ const Users = () => {
                                                         style={{ color: 'var(--crit)' }}
                                                         onClick={() => doDelete(u.id)}
                                                     >
-                                                        Deactivate
+                                                        {t('common.deactivate')}
                                                     </button>
                                                 )}
                                             </div>
@@ -291,7 +293,7 @@ const Users = () => {
                 <ModalOverlay onClose={() => setEditorOpen(false)}>
                     <form className="panel" onSubmit={submit} style={{ width: 520 }}>
                         <div className="panel-head">
-                            <strong>{editing ? 'Edit user' : 'Add user'}</strong>
+                            <strong>{editing ? t('users.editUser') : t('users.addUser')}</strong>
                             <button type="button" className="btn ghost" onClick={() => setEditorOpen(false)}>
                                 <Icon name="x" />
                             </button>
@@ -307,7 +309,7 @@ const Users = () => {
                             ) : null}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                 <div>
-                                    <label>Email</label>
+                                    <label>{t('users.email')}</label>
                                     <div className="field">
                                         <input
                                             type="email"
@@ -318,7 +320,7 @@ const Users = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label>{editing ? 'New password (optional)' : 'Password'}</label>
+                                    <label>{editing ? t('users.passwordKeep') : t('users.password')}</label>
                                     <div className="field">
                                         <input
                                             type="password"
@@ -330,7 +332,7 @@ const Users = () => {
                                 </div>
                             </div>
                             <div>
-                                <label>Full name</label>
+                                <label>{t('users.fullName')}</label>
                                 <div className="field">
                                     <input
                                         value={form.full_name}
@@ -341,20 +343,20 @@ const Users = () => {
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                 <div>
-                                    <label>Role</label>
+                                    <label>{t('users.role')}</label>
                                     <div className="field">
                                         <select
                                             value={form.role}
                                             onChange={(e) => setForm({ ...form, role: e.target.value })}
                                         >
-                                            <option value="ADMIN">Admin</option>
-                                            <option value="MANAGER">Manager</option>
-                                            <option value="DRIVER">Driver</option>
+                                            <option value="ADMIN">{t('users.roleAdmin')}</option>
+                                            <option value="MANAGER">{t('users.roleManager')}</option>
+                                            <option value="DRIVER">{t('users.roleDriver')}</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div>
-                                    <label>Phone</label>
+                                    <label>{t('users.phone')}</label>
                                     <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: 6 }}>
                                         <div className="field">
                                             <select
@@ -384,26 +386,26 @@ const Users = () => {
                             {editing ? (
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                     <div>
-                                        <label>Status</label>
+                                        <label>{t('common.status')}</label>
                                         <div className="field">
                                             <select
                                                 value={form.is_active ? 'true' : 'false'}
                                                 onChange={(e) => setForm({ ...form, is_active: e.target.value === 'true' })}
                                             >
-                                                <option value="true">Active</option>
-                                                <option value="false">Inactive</option>
+                                                <option value="true">{t('common.active')}</option>
+                                                <option value="false">{t('common.inactive')}</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div>
-                                        <label>Preferred language</label>
+                                        <label>{t('users.preferredLang')}</label>
                                         <div className="field">
                                             <select
                                                 value={form.preferred_language}
                                                 onChange={(e) => setForm({ ...form, preferred_language: e.target.value })}
                                             >
-                                                <option value="en">English</option>
-                                                <option value="ar">Arabic</option>
+                                                <option value="en">{t('settings.english')}</option>
+                                                <option value="ar">{t('settings.arabic')}</option>
                                             </select>
                                         </div>
                                     </div>
@@ -417,10 +419,10 @@ const Users = () => {
                                         className="mono text-xs muted"
                                         style={{ letterSpacing: '.06em', textTransform: 'uppercase' }}
                                     >
-                                        Driver details
+                                        {t('users.driverDetails')}
                                     </div>
                                     <div>
-                                        <label>License number</label>
+                                        <label>{t('users.licenseNumber')}</label>
                                         <div className="field">
                                             <input
                                                 value={form.license_number}
@@ -431,7 +433,7 @@ const Users = () => {
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                         <div>
-                                            <label>License expiry</label>
+                                            <label>{t('users.licenseExpiry')}</label>
                                             <div className="field">
                                                 <input
                                                     type="date"
@@ -441,7 +443,7 @@ const Users = () => {
                                             </div>
                                         </div>
                                         <div>
-                                            <label>Garage ID</label>
+                                            <label>{t('users.garageId')}</label>
                                             <div className="field">
                                                 <input
                                                     type="number"
@@ -463,9 +465,9 @@ const Users = () => {
                                 justifyContent: 'flex-end',
                             }}
                         >
-                            <button type="button" className="btn" onClick={() => setEditorOpen(false)}>Cancel</button>
+                            <button type="button" className="btn" onClick={() => setEditorOpen(false)}>{t('common.cancel')}</button>
                             <button type="submit" className="btn primary" disabled={submitting}>
-                                {submitting ? 'Saving…' : editing ? 'Save changes' : 'Create'}
+                                {submitting ? t('shell.saving') : editing ? t('common.save') : t('common.create')}
                             </button>
                         </div>
                     </form>

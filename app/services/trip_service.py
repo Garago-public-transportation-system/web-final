@@ -40,6 +40,44 @@ def compute_is_late_now(trip: Trip, now: Optional[datetime] = None) -> bool:
     return now > sched_end + timedelta(minutes=settings.LATE_THRESHOLD_MINUTES)
 
 
+async def update_late_trips(db: AsyncSession) -> int:
+    """Persist `is_late=True` on every ACTIVE trip whose scheduled_end + grace
+    has elapsed. Returns the number of rows flipped.
+
+    GAP-06: Without this, DailyReport.on_time_percentage is always 100% because
+    `is_late` is never written after trip creation.
+    """
+    from sqlalchemy.orm import selectinload
+
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(minutes=settings.LATE_THRESHOLD_MINUTES)
+
+    candidates = (await db.execute(
+        select(Trip)
+        .options(selectinload(Trip.route))
+        .where(
+            Trip.status == TripStatus.ACTIVE,
+            Trip.is_late == False,  # noqa: E712 — SQL boolean, not Python `not`
+        )
+    )).scalars().all()
+
+    flipped = 0
+    for trip in candidates:
+        sched_end = _scheduled_end(trip)
+        if not sched_end:
+            continue
+        # Normalise possibly-naive datetimes coming from older rows.
+        if sched_end.tzinfo is None:
+            sched_end = sched_end.replace(tzinfo=timezone.utc)
+        if sched_end < cutoff:
+            trip.is_late = True
+            flipped += 1
+
+    if flipped:
+        await db.commit()
+    return flipped
+
+
 async def build_trip_detail(trip_id: int, db: AsyncSession) -> Optional[dict]:
     """Load a trip with relationships and return the full detail dict.
 
