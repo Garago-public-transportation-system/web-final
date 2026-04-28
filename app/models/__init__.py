@@ -3,5 +3,5 @@ from app.models.models import (
     MaintenanceStatus, MaintenanceType, ShiftType, RotationPosition, ReplacementReason,
     Garage, User, Driver, Vehicle, Route, RouteStop, RotationAssignment,
     Trip, MaintenanceRequest, Notification, DriverExchange,
-    BreakLog, DailyReport, AuditLog
+    BreakLog, DailyReport, AuditLog, GpsTracking
 )

@@ -82,6 +82,7 @@ class NotificationStatus(str, Enum):
     DELIVERED = "DELIVERED"
     READ = "READ"
 
+
 # --- MODELS ---
 
 class Garage(Base):
@@ -113,6 +114,10 @@ class User(Base):
     phone: Mapped[Optional[str]] = mapped_column(String(20))
     preferred_language: Mapped[str] = mapped_column(String(5), default="en")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    email_verification_token: Mapped[Optional[str]] = mapped_column(String(128), unique=True, index=True)
+    password_reset_token: Mapped[Optional[str]] = mapped_column(String(128), unique=True, index=True)
+    password_reset_expires: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
 
@@ -178,6 +183,10 @@ class Vehicle(Base):
         default=VehicleStatus.FREE
     )
     garage_id: Mapped[Optional[int]] = mapped_column(ForeignKey("garages.id"))
+    current_latitude: Mapped[Optional[float]] = mapped_column(Float)
+    current_longitude: Mapped[Optional[float]] = mapped_column(Float)
+    mileage: Mapped[float] = mapped_column(Float, default=0.0)
+    fuel_level: Mapped[float] = mapped_column(Float, default=100.0)
     last_maintenance_date: Mapped[Optional[date]] = mapped_column(Date)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
@@ -321,7 +330,7 @@ class GateLog(Base):
     plate_number: Mapped[str] = mapped_column(String(50), nullable=False)
     ocr_raw_text: Mapped[Optional[str]] = mapped_column(String(100))
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
-    match_method: Mapped[Optional[str]] = mapped_column(String(20))  # exact | confusable | none
+    match_method: Mapped[Optional[str]] = mapped_column(String(50))  # exact | confusable | none
     event: Mapped[str] = mapped_column(String(50), nullable=False)  # GRANTED / DENIED / IGNORED
     vehicle_id: Mapped[Optional[int]] = mapped_column(ForeignKey("vehicles.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
@@ -406,8 +415,7 @@ class Ticket(Base):
     seat_number: Mapped[Optional[str]] = mapped_column(String(10))
     price: Mapped[float] = mapped_column(Float, nullable=False)
     status: Mapped[TripTicketStatus] = mapped_column(
-        # ticket_status enum in DB only has ISSUED/USED/EXPIRED — use String to stay safe
-        String(20),
+        SAEnum(TripTicketStatus, name="tripticksetstatus", create_type=False),
         default=TripTicketStatus.ISSUED
     )
     purchase_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
@@ -540,3 +548,26 @@ class GateCamera(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
+
+
+class GpsTracking(Base):
+    __tablename__ = "gps_tracking"
+    __table_args__ = (
+        Index("idx_gps_vehicle_time", "vehicle_id", "recorded_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    vehicle_id: Mapped[int] = mapped_column(ForeignKey("vehicles.id"), nullable=False)
+    trip_id: Mapped[Optional[int]] = mapped_column(ForeignKey("trips.id"))
+    latitude: Mapped[float] = mapped_column(Float, nullable=False)
+    longitude: Mapped[float] = mapped_column(Float, nullable=False)
+    speed: Mapped[float] = mapped_column(Float, nullable=False)
+    heading: Mapped[float] = mapped_column(Float, nullable=False)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
+
+    vehicle: Mapped["Vehicle"] = relationship("Vehicle")
+    trip: Mapped[Optional["Trip"]] = relationship("Trip")
+
+    vehicle: Mapped["Vehicle"] = relationship("Vehicle")
+    trip: Mapped[Optional["Trip"]] = relationship("Trip")
