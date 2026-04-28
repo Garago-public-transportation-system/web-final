@@ -239,7 +239,7 @@ const SEVERITY = {
         chipBg: 'var(--crit)',
         chipFg: 'var(--bg)',
         label: 'CRITICAL',
-        icon: 'shield',
+        icon: 'alert-octagon',
     },
     warn: {
         bar: 'var(--warn)',
@@ -247,7 +247,7 @@ const SEVERITY = {
         chipBg: 'var(--warn)',
         chipFg: 'var(--ink)',
         label: 'WARN',
-        icon: 'flash',
+        icon: 'alert-triangle',
     },
     ok: {
         bar: 'var(--ok)',

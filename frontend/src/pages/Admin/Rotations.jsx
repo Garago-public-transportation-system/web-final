@@ -8,7 +8,35 @@ import { useTranslation } from '../../hooks/useTranslation';
 const SHIFT_TYPES = ['MORNING', 'EVENING'];
 const POSITIONS = ['DRIVER_1', 'DRIVER_2', 'DRIVER_3'];
 
-const todayStr = () => new Date().toISOString().split('T')[0];
+// Mirrors backend app/core/config.py defaults
+const SHIFT_HOURS = {
+    MORNING: { start: '06:00:00', end: '15:00:00' },
+    EVENING: { start: '15:00:00', end: '23:00:00' },
+};
+
+const todayStr = () => {
+    // Local YYYY-MM-DD (avoid the UTC shift from new Date().toISOString())
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+};
+
+const buildDefaultForm = (shift = 'MORNING') => {
+    const today = todayStr();
+    const { start, end } = SHIFT_HOURS[shift];
+    return {
+        route_id: '',
+        driver_id: '',
+        vehicle_id: '',
+        shift_type: shift,
+        position: 'DRIVER_1',
+        shift_date: today,
+        shift_start_time: `${today}T${start}`,
+        shift_end_time: `${today}T${end}`,
+    };
+};
 
 const Rotations = () => {
     const { t } = useTranslation();
@@ -21,16 +49,7 @@ const Rotations = () => {
     const [shiftFilter, setShiftFilter] = useState('ALL');
     const [open, setOpen] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [form, setForm] = useState({
-        route_id: '',
-        driver_id: '',
-        vehicle_id: '',
-        shift_type: 'MORNING',
-        position: 'DRIVER_1',
-        shift_date: todayStr(),
-        shift_start_time: `${todayStr()}T06:00:00`,
-        shift_end_time: `${todayStr()}T15:00:00`,
-    });
+    const [form, setForm] = useState(() => buildDefaultForm());
 
     const fetchAll = useCallback(async () => {
         setLoading(true);
@@ -78,18 +97,30 @@ const Rotations = () => {
     }, [assignments, shiftFilter]);
 
     const openCreate = () => {
-        const t = todayStr();
-        setForm({
-            route_id: '',
-            driver_id: '',
-            vehicle_id: '',
-            shift_type: 'MORNING',
-            position: 'DRIVER_1',
-            shift_date: t,
-            shift_start_time: `${t}T06:00:00`,
-            shift_end_time: `${t}T15:00:00`,
-        });
+        // Reset to today's defaults whenever modal reopens (was using
+        // module-load date, which got stale across sessions).
+        setForm(buildDefaultForm());
         setOpen(true);
+    };
+
+    const onShiftTypeChange = (newShift) => {
+        const { start, end } = SHIFT_HOURS[newShift];
+        setForm((prev) => ({
+            ...prev,
+            shift_type: newShift,
+            shift_start_time: `${prev.shift_date}T${start}`,
+            shift_end_time: `${prev.shift_date}T${end}`,
+        }));
+    };
+
+    const onShiftDateChange = (newDate) => {
+        const { start, end } = SHIFT_HOURS[form.shift_type];
+        setForm((prev) => ({
+            ...prev,
+            shift_date: newDate,
+            shift_start_time: `${newDate}T${start}`,
+            shift_end_time: `${newDate}T${end}`,
+        }));
     };
 
     const submit = async () => {
@@ -183,7 +214,7 @@ const Rotations = () => {
                                                 ) : null}
                                             </td>
                                             <td><Tag status={a.shift_type} /></td>
-                                            <td className="mono text-xs">{a.position}</td>
+                                            <td className="text-xs">{t(`rotations.position.${a.position}`)}</td>
                                             <td>{driver?.user?.full_name || `D-${a.driver_id}`}</td>
                                             <td className="mono text-xs">{vehicle?.plate_number || `V-${a.vehicle_id}`}</td>
                                             <td className="num mono text-xs muted">
@@ -260,10 +291,10 @@ const Rotations = () => {
                                 <Field label={t('rotations.shift')}>
                                     <select
                                         value={form.shift_type}
-                                        onChange={(e) => setForm({ ...form, shift_type: e.target.value })}
+                                        onChange={(e) => onShiftTypeChange(e.target.value)}
                                     >
                                         {SHIFT_TYPES.map((s) => (
-                                            <option key={s} value={s}>{s}</option>
+                                            <option key={s} value={s}>{t(`rotations.shift.${s}`)}</option>
                                         ))}
                                     </select>
                                 </Field>
@@ -273,7 +304,7 @@ const Rotations = () => {
                                         onChange={(e) => setForm({ ...form, position: e.target.value })}
                                     >
                                         {POSITIONS.map((p) => (
-                                            <option key={p} value={p}>{p}</option>
+                                            <option key={p} value={p}>{t(`rotations.position.${p}`)}</option>
                                         ))}
                                     </select>
                                 </Field>
@@ -281,15 +312,7 @@ const Rotations = () => {
                                     <input
                                         type="date"
                                         value={form.shift_date}
-                                        onChange={(e) => {
-                                            const d = e.target.value;
-                                            setForm({
-                                                ...form,
-                                                shift_date: d,
-                                                shift_start_time: `${d}T06:00:00`,
-                                                shift_end_time: `${d}T15:00:00`,
-                                            });
-                                        }}
+                                        onChange={(e) => onShiftDateChange(e.target.value)}
                                     />
                                 </Field>
                             </div>

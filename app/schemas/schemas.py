@@ -60,6 +60,10 @@ class UserUpdate(BaseSchema):
         return v
 
 class UserResponse(UserBase):
+    # Override `phone` to drop the input-only regex pattern. Same reasoning
+    # as VehicleResponse.plate_number: legacy rows must serialize cleanly
+    # even if their phone format predates the current regex contract.
+    phone: Optional[str] = None
     id: int
     created_at: datetime
     updated_at: datetime
@@ -147,6 +151,12 @@ class VehicleUpdate(BaseSchema):
     status: Optional[VehicleStatus] = None
 
 class VehicleResponse(VehicleBase):
+    # Override `plate_number` to drop the input-only regex pattern.
+    # Reason: legacy/seed rows may not match the strict pattern that we
+    # enforce at create/update time (e.g. plate "Hi" from early seed data).
+    # Output validation must not 500 on otherwise-readable rows; the input
+    # boundary is still validated via VehicleCreate / VehicleUpdate.
+    plate_number: str
     id: int
     status: VehicleStatus
     last_maintenance_date: Optional[date]
@@ -369,6 +379,13 @@ class TicketBase(BaseSchema):
 
 class TicketCreate(TicketBase):
     pass
+
+class DriverTicketIssueRequest(BaseSchema):
+    """Driver-side ticket-issue payload. trip_id is taken from the URL,
+    price is determined server-side from the route fare, and status is
+    always ISSUED — none of those can be set by the client."""
+    passenger_name: Optional[str] = None
+    seat_number: Optional[str] = None
 
 class TicketResponse(TicketBase):
     id: int

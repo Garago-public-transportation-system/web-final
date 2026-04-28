@@ -13,9 +13,6 @@ const TripDetails = () => {
     const addAlert = useAlertStore((s) => s.addAlert);
     const [trip, setTrip] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [open, setOpen] = useState(false);
-    const [saving, setSaving] = useState(false);
-    const [form, setForm] = useState({ passenger_name: '', seat_number: '', price: '50.00' });
 
     const fetchTrip = useCallback(async () => {
         setLoading(true);
@@ -31,33 +28,6 @@ const TripDetails = () => {
     }, [id, user, addAlert]);
 
     useEffect(() => { if (user) fetchTrip(); }, [user, fetchTrip]);
-
-    const issue = async () => {
-        if (!form.passenger_name || !form.seat_number) {
-            addAlert?.({ type: 'WARN', message: 'Name and seat required.' });
-            return;
-        }
-        setSaving(true);
-        try {
-            await api.post('/admin/tickets', {
-                trip_id: Number(id),
-                passenger_name: form.passenger_name,
-                seat_number: String(form.seat_number),
-                price: parseFloat(form.price) || 0,
-                status: 'ISSUED',
-            });
-            addAlert?.({ type: 'OK', message: 'Ticket issued.' });
-            setOpen(false);
-            setForm({ passenger_name: '', seat_number: '', price: '50.00' });
-            fetchTrip();
-        } catch (err) {
-            const d = err?.response?.data?.detail;
-            const msg = typeof d === 'string' ? d : Array.isArray(d) ? d[0]?.msg : 'Issue failed.';
-            addAlert?.({ type: 'ERROR', message: msg });
-        } finally {
-            setSaving(false);
-        }
-    };
 
     const { origin, destination, capacity, sold, occupancy } = useMemo(() => {
         if (!trip) return { origin: '—', destination: '—', capacity: 0, sold: 0, occupancy: 0 };
@@ -211,11 +181,9 @@ const TripDetails = () => {
                 <Panel
                     title="Passenger manifest"
                     action={
-                        user?.role === 'ADMIN' ? (
-                            <button className="btn primary" onClick={() => setOpen(true)}>
-                                <Icon name="plus" />Issue ticket
-                            </button>
-                        ) : null
+                        <span className="mono text-xs muted">
+                            {trip.tickets?.length || 0} issued
+                        </span>
                     }
                     flush
                 >
@@ -250,61 +218,6 @@ const TripDetails = () => {
                 </Panel>
             </div>
 
-            {open ? (
-                <ModalOverlay onClose={() => setOpen(false)}>
-                    <div className="panel" style={{ width: 480 }}>
-                        <div className="panel-head">
-                            <strong>Issue ticket</strong>
-                            <button className="btn ghost" onClick={() => setOpen(false)}>
-                                <Icon name="x" />
-                            </button>
-                        </div>
-                        <div className="panel-body">
-                            <div style={{ display: 'grid', gap: 12 }}>
-                                <Field label="Passenger name">
-                                    <input
-                                        value={form.passenger_name}
-                                        onChange={(e) => setForm({ ...form, passenger_name: e.target.value })}
-                                        placeholder="Full name"
-                                        autoFocus
-                                    />
-                                </Field>
-                                <div className="grid-2" style={{ gap: 12 }}>
-                                    <Field label="Seat">
-                                        <input
-                                            value={form.seat_number}
-                                            onChange={(e) => setForm({ ...form, seat_number: e.target.value })}
-                                            placeholder="12"
-                                        />
-                                    </Field>
-                                    <Field label="Price (EGP)">
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            value={form.price}
-                                            onChange={(e) => setForm({ ...form, price: e.target.value })}
-                                        />
-                                    </Field>
-                                </div>
-                            </div>
-                        </div>
-                        <div
-                            style={{
-                                display: 'flex',
-                                gap: 8,
-                                padding: 14,
-                                borderTop: '1px solid var(--line)',
-                                justifyContent: 'flex-end',
-                            }}
-                        >
-                            <button className="btn" onClick={() => setOpen(false)}>Cancel</button>
-                            <button className="btn primary" onClick={issue} disabled={saving}>
-                                {saving ? 'Issuing…' : 'Confirm issuance'}
-                            </button>
-                        </div>
-                    </div>
-                </ModalOverlay>
-            ) : null}
         </>
     );
 };
@@ -313,34 +226,6 @@ const Row = ({ label, value, mono }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
         <span className="muted text-sm">{label}</span>
         <span className={mono ? 'mono text-sm' : 'text-sm'} style={{ fontWeight: 600 }}>{value}</span>
-    </div>
-);
-
-const Field = ({ label, children }) => (
-    <div>
-        <label className="text-xs muted mono" style={{ textTransform: 'uppercase', letterSpacing: '.08em' }}>
-            {label}
-        </label>
-        <div className="field" style={{ marginTop: 4 }}>{children}</div>
-    </div>
-);
-
-const ModalOverlay = ({ children, onClose }) => (
-    <div
-        role="dialog"
-        aria-modal="true"
-        onClick={onClose}
-        style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,.4)',
-            backdropFilter: 'blur(6px)',
-            display: 'grid',
-            placeItems: 'center',
-            zIndex: 200,
-        }}
-    >
-        <div onClick={(e) => e.stopPropagation()}>{children}</div>
     </div>
 );
 

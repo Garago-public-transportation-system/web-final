@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.config import settings
 from app.api.deps import get_current_user_with_role
-from app.models.models import UserRole, Driver, Trip, BreakLog, DriverStatus, TripStatus, Ticket, Vehicle, VehicleStatus, RerouteLog, RerouteStatus, Notification, NotificationStatus
-from app.schemas.schemas import DriverResponse, TripResponse, BreakLogResponse, RerouteRequest, RerouteLogResponse, NotificationResponse
+from app.models.models import UserRole, Driver, Trip, BreakLog, DriverStatus, TripStatus, Ticket, Vehicle, VehicleStatus, RerouteLog, RerouteStatus, Notification, NotificationStatus, Route
+from app.schemas.schemas import DriverResponse, TripResponse, BreakLogResponse, RerouteRequest, RerouteLogResponse, NotificationResponse, DriverTicketIssueRequest, TicketResponse
 from app.services.break_service import start_break, end_break, get_break_status
 
 router = APIRouter(dependencies=[Depends(get_current_user_with_role(UserRole.DRIVER))])
@@ -390,3 +390,96 @@ async def mark_notification_read(
         await db.commit()
         await db.refresh(notif)
     return notif
+
+
+# --- Tickets (driver-side issuance) ---
+
+def _generate_ticket_code() -> str:
+    """8-char alphanumeric code, no ambiguous chars (I/O/0/1)."""
+    import secrets
+    allowed = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    return "".join(secrets.choice(allowed) for _ in range(8))
+
+
+@router.post("/me/trips/{trip_id}/tickets", response_model=TicketResponse, status_code=201)
+async def issue_ticket_for_my_trip(
+    trip_id: int,
+    payload: DriverTicketIssueRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user=Depends(get_current_user_with_role(UserRole.DRIVER)),
+):
+    """Issue a ticket for the current driver's ACTIVE trip.
+
+    Authorization rules:
+      - The driver issuing must be the driver assigned to the trip.
+      - Trip must be ACTIVE (no pre-sale on SCHEDULED, no post-sale after COMPLETED).
+      - Bus must not be at capacity.
+      - Seat number, if provided, must not already be taken on this trip.
+
+    Server controls price (route fare with a 15.0 fallback) and status (always ISSUED).
+    """
+    driver = (await db.execute(
+        select(Driver).where(Driver.user_id == current_user.id)
+    )).scalar_one_or_none()
+    if not driver:
+        raise HTTPException(status_code=404, detail="Driver profile not found")
+
+    trip = await db.get(Trip, trip_id)
+    if not trip or trip.driver_id != driver.id:
+        raise HTTPException(status_code=404, detail="Trip not found or not assigned to you")
+
+    if trip.status != TripStatus.ACTIVE:
+        raise HTTPException(
+            status_code=400,
+            detail="Tickets can only be issued for currently ACTIVE trips.",
+        )
+
+    vehicle = await db.get(Vehicle, trip.vehicle_id)
+    if not vehicle:
+        raise HTTPException(status_code=400, detail="Trip has no assigned vehicle")
+
+    bus_capacity = vehicle.capacity or 50
+
+    current_count = await db.scalar(
+        select(func.count(Ticket.id)).where(Ticket.trip_id == trip_id)
+    ) or 0
+    if current_count >= bus_capacity:
+        raise HTTPException(status_code=400, detail=f"Bus is full (capacity {bus_capacity}).")
+
+    if payload.seat_number:
+        seat_taken = await db.scalar(
+            select(Ticket.id).where(
+                Ticket.trip_id == trip_id,
+                Ticket.seat_number == payload.seat_number,
+            )
+        )
+        if seat_taken:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Seat {payload.seat_number} is already taken.",
+            )
+
+    # Generate unique ticket code (collision is statistically negligible but we still check).
+    while True:
+        code = _generate_ticket_code()
+        if not await db.scalar(select(Ticket.id).where(Ticket.ticket_code == code)):
+            break
+
+    # Server-side price: route fare, never the client.
+    DEFAULT_TICKET_FARE = 15.0
+    route = await db.get(Route, trip.route_id)
+    ticket_price = route.fare if route and route.fare > 0 else DEFAULT_TICKET_FARE
+
+    ticket = Ticket(
+        trip_id=trip_id,
+        passenger_name=payload.passenger_name,
+        seat_number=payload.seat_number,
+        price=ticket_price,
+        ticket_code=code,
+    )
+    db.add(ticket)
+    trip.passenger_count = (trip.passenger_count or 0) + 1
+
+    await db.commit()
+    await db.refresh(ticket)
+    return ticket

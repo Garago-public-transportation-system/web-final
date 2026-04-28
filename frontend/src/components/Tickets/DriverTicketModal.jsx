@@ -41,14 +41,14 @@ const DriverTicketModal = ({ open, onClose, tripId }) => {
             setIssueError('');
             setIssueResult(null);
 
+            // Driver-only endpoint. trip_id comes from the URL; price is set
+            // server-side from the route fare (client-supplied price ignored).
             const payload = {
-                trip_id: tripId,
                 passenger_name: issueData.passenger_name || 'Walk-in Passenger',
-                price: isNaN(parseFloat(issueData.price)) ? 15.0 : parseFloat(issueData.price),
-                seat_number: issueData.seat_number ? issueData.seat_number : null
+                seat_number: issueData.seat_number ? issueData.seat_number : null,
             };
 
-            const response = await api.post('/admin/tickets/', payload);
+            const response = await api.post(`/drivers/me/trips/${tripId}/tickets`, payload);
             setIssueResult(response.data);
             setIssueData({ passenger_name: '', seat_number: '', price: '15.00' }); // reset form
         } catch (error) {
@@ -133,19 +133,14 @@ const DriverTicketModal = ({ open, onClose, tripId }) => {
                                 onChange={e => setIssueData({ ...issueData, seat_number: e.target.value })}
                                 fullWidth
                             />
-                            <TextField
-                                label="Price"
-                                type="number"
-                                InputProps={{ startAdornment: <Typography sx={{ mr: 1 }}>EGP</Typography> }}
-                                value={issueData.price}
-                                onChange={e => setIssueData({ ...issueData, price: e.target.value })}
-                                fullWidth
-                            />
+                            <Alert severity="info" sx={{ mt: 1 }}>
+                                Price is determined automatically from the route fare.
+                            </Alert>
                             <Button
                                 variant="contained"
                                 size="large"
                                 onClick={handleIssueTicket}
-                                disabled={loading || !issueData.price}
+                                disabled={loading}
                                 sx={{ py: 1.5, mt: 2 }}
                             >
                                 {loading ? <CircularProgress size={24} /> : "Print & Issue Ticket"}

@@ -123,16 +123,21 @@ const Schedule = () => {
             return { driver_id: id, row };
         });
         const idToIdx = Object.fromEntries(driverIds.map((id, i) => [id, i]));
-        const weekStartMs = weekDays[0].getTime();
+        // Index lookup by local YYYY-MM-DD to avoid the UTC-vs-local
+        // off-by-one that shifts Monday rotations into Tuesday in
+        // east-of-UTC timezones (e.g. Africa/Cairo).
+        const isoToIdx = Object.fromEntries(weekDays.map((d, i) => [fmtDateISO(d), i]));
         for (const r of rotations) {
-            const d = new Date(r.shift_date);
-            const dayDiff = Math.floor((d.getTime() - weekStartMs) / (24 * 3600 * 1000));
-            if (dayDiff >= 0 && dayDiff < 7 && idToIdx[r.driver_id] != null) {
-                grid[idToIdx[r.driver_id]].row[dayDiff].add(r.shift_type);
+            const isoStr = typeof r.shift_date === 'string'
+                ? r.shift_date.slice(0, 10)
+                : fmtDateISO(new Date(r.shift_date));
+            const dayIdx = isoToIdx[isoStr];
+            if (dayIdx != null && idToIdx[r.driver_id] != null) {
+                grid[idToIdx[r.driver_id]].row[dayIdx].add(r.shift_type);
             }
         }
         let filled = 0;
-        let capacity = driverIds.length * 7;
+        const capacity = driverIds.length * 7;
         for (const { row } of grid) {
             for (const cell of row) if (cell.size > 0) filled += 1;
         }
@@ -200,7 +205,9 @@ const Schedule = () => {
         <>
             <PageHeader
                 title={t('schedule.title')}
-                sub={tab === 'ROSTER' ? `${t('schedule.weeklyRoster')} · ${rangeLabel}` : `${trips.length} · ${todayLabel}`}
+                sub={tab === 'ROSTER'
+                    ? `${t('schedule.weeklyRoster')} · ${rangeLabel}`
+                    : `${t('schedule.tripsCount', { n: trips.length })} · ${todayLabel}`}
                 actions={(
                     <>
                         <button className="btn" onClick={() => generate(true)} disabled={busy}>

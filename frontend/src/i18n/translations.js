@@ -394,6 +394,8 @@ const translations = {
         'schedule.scheduleGenerated': 'Schedule generated.',
         'schedule.generationFailed': 'Generation failed.',
         'schedule.tripNumber': 'Trip #',
+        'schedule.tripsCount': '{n} trips',
+        'schedule.refresh': 'Refresh',
 
         // Rotations
         'rotations.assignDriver': 'Assign driver',
@@ -408,6 +410,11 @@ const translations = {
         'rotations.assignments': 'assignments',
         'rotations.noAssignments': 'No rotation assignments.',
         'rotations.all': 'All',
+        'rotations.shift.MORNING': 'Morning',
+        'rotations.shift.EVENING': 'Evening',
+        'rotations.position.DRIVER_1': 'Driver 1 (lead)',
+        'rotations.position.DRIVER_2': 'Driver 2 (relief)',
+        'rotations.position.DRIVER_3': 'Driver 3 (reserve)',
 
         // Users (extras)
         'users.addUserBtn': 'Add user',
@@ -896,6 +903,8 @@ const translations = {
         'schedule.scheduleGenerated': 'تم إنشاء الجدول.',
         'schedule.generationFailed': 'فشل الإنشاء.',
         'schedule.tripNumber': 'رقم الرحلة',
+        'schedule.tripsCount': '{n} رحلة',
+        'schedule.refresh': 'تحديث',
 
         // Rotations
         'rotations.assignDriver': 'تعيين سائق',
@@ -910,6 +919,11 @@ const translations = {
         'rotations.assignments': 'تعيينات',
         'rotations.noAssignments': 'لا توجد تعيينات دورات.',
         'rotations.all': 'الكل',
+        'rotations.shift.MORNING': 'الصباحية',
+        'rotations.shift.EVENING': 'المسائية',
+        'rotations.position.DRIVER_1': 'السائق ١ (أساسي)',
+        'rotations.position.DRIVER_2': 'السائق ٢ (مساعد)',
+        'rotations.position.DRIVER_3': 'السائق ٣ (احتياطي)',
 
         // Users (extras)
         'users.addUserBtn': 'إضافة مستخدم',
