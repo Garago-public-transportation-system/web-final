@@ -287,6 +287,17 @@ class MaintenanceCreate(BaseSchema):
     priority: int = 3
     estimated_cost: Optional[float] = None
 
+
+class MaintenanceRequestCreate(BaseSchema):
+    """Public-facing payload for `POST /maintenance-requests`.
+
+    The current authenticated user is taken as the requester; type defaults to
+    REGULAR and is overridden to EMERGENCY when priority is 1 (highest)."""
+
+    issue_description: str = Field(..., min_length=3, max_length=2000)
+    vehicle_id: int = Field(..., gt=0)
+    priority: int = Field(3, ge=1, le=5, description="1 = highest, 5 = lowest")
+
 class MaintenanceResponse(BaseSchema):
     id: int
     vehicle_id: int
@@ -459,3 +470,31 @@ class UserProfileUpdate(BaseSchema):
     full_name: Optional[str] = None
     phone: Optional[str] = Field(None, pattern=r'^\+?[1-9]\d{1,14}$')
     preferred_language: Optional[str] = None
+
+
+class ProfileUpdateRequest(BaseSchema):
+    """Payload for `PATCH /users/profile`. Accepts `phone_number` as an alias
+    for the underlying `phone` column."""
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    full_name: Optional[str] = Field(None, min_length=1, max_length=255)
+    email: Optional[EmailStr] = None
+    phone_number: Optional[str] = Field(
+        None, alias="phone", pattern=r'^\+?[1-9]\d{1,14}$'
+    )
+
+
+# --- Forgot / Reset Password ---
+class ForgotPasswordRequest(BaseSchema):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseSchema):
+    token: str = Field(..., min_length=16, max_length=256)
+    new_password: str = Field(..., min_length=8)
+
+    @field_validator('new_password')
+    @classmethod
+    def password_strength(cls, v):
+        return _validate_password_strength(v)

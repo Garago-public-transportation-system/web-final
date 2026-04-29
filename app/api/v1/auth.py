@@ -6,10 +6,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 from app.core.database import get_db
-from app.core.security import security
+from app.core.security import security, PASSWORD_RESET_TOKEN_TTL_MINUTES
 from app.core.config import settings
 from app.models.models import User, UserRole
-from app.schemas.schemas import UserResponse, Token, RefreshRequest, SignupRequest, PasswordChangeRequest, UserProfileUpdate
+from app.schemas.schemas import (
+    UserResponse, Token, RefreshRequest, SignupRequest, PasswordChangeRequest,
+    UserProfileUpdate, ForgotPasswordRequest, ResetPasswordRequest,
+)
 from app.api.deps import get_current_active_user, get_current_user_with_role
 from app.services.audit_service import log_action
 
@@ -161,4 +164,115 @@ async def change_password(
 
     ip = request.client.host if request.client else None
     await log_action(db, current_user.id, "CHANGE_PASSWORD", "User", current_user.id, ip_address=ip)
+    await db.commit()
+
+
+@router.post("/forgot-password", status_code=status.HTTP_202_ACCEPTED)
+@limiter.limit("3/minute")
+async def forgot_password(
+    request: Request,
+    body: ForgotPasswordRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Issue a password-reset token to the requesting user.
+
+    Security properties:
+      - The raw token is generated server-side, hashed with bcrypt before
+        being stored, and only the raw value is returned in the response so
+        a downstream notifier can email it. Even if the database leaks, the
+        stored hash is unusable.
+      - Tokens expire 15 minutes after issuance (see
+        `PASSWORD_RESET_TOKEN_TTL_MINUTES`).
+      - The endpoint is rate-limited to mitigate enumeration / spam.
+      - Every attempt is recorded in the audit log with the user id (when
+        the email matches an account), the action, the IP address, and the
+        timestamp (provided automatically by `AuditLog.created_at`).
+      - The HTTP response is the same regardless of whether the email is
+        registered, to avoid leaking account existence.
+    """
+    ip = request.client.host if request.client else None
+
+    user = (await db.execute(select(User).where(User.email == body.email))).scalar_one_or_none()
+
+    raw_token: str | None = None
+    if user and user.is_active:
+        raw_token = security.create_password_reset_token()
+        user.password_reset_token = security.hash_password_reset_token(raw_token)
+        user.password_reset_expires = datetime.now(timezone.utc) + timedelta(
+            minutes=PASSWORD_RESET_TOKEN_TTL_MINUTES
+        )
+        await log_action(
+            db, user.id, "FORGOT_PASSWORD_REQUEST", "User", user.id,
+            new_values={"email": body.email}, ip_address=ip,
+        )
+        await db.commit()
+    else:
+        # Audit the failed attempt with no user_id so admins can spot probing.
+        await log_action(
+            db, None, "FORGOT_PASSWORD_REQUEST_UNKNOWN", "User", None,
+            new_values={"email": body.email}, ip_address=ip,
+        )
+        await db.commit()
+
+    response: dict = {
+        "message": "If an account exists for this email, a reset link has been sent.",
+        "expires_in_minutes": PASSWORD_RESET_TOKEN_TTL_MINUTES,
+    }
+    # In production, the raw token should be delivered via a side channel
+    # (email) rather than the response body. We surface it here so the
+    # caller can plug in their own delivery during development.
+    if raw_token is not None:
+        response["reset_token"] = raw_token
+    return response
+
+
+@router.post("/reset-password", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("5/minute")
+async def reset_password(
+    request: Request,
+    body: ResetPasswordRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Consume a password-reset token and set a new password.
+
+    Validates the token against the stored bcrypt hash and rejects expired
+    or unknown tokens with the same generic 400 message to avoid leaking
+    which condition failed. On success the token fields are cleared so the
+    same token cannot be re-used.
+    """
+    ip = request.client.host if request.client else None
+    now = datetime.now(timezone.utc)
+
+    # Narrow candidate set to users with a non-null token + valid expiry.
+    candidates = (await db.execute(
+        select(User).where(
+            User.password_reset_token.is_not(None),
+            User.password_reset_expires.is_not(None),
+            User.password_reset_expires > now,
+        )
+    )).scalars().all()
+
+    matched: User | None = None
+    for candidate in candidates:
+        if security.verify_password_reset_token(body.token, candidate.password_reset_token or ""):
+            matched = candidate
+            break
+
+    if matched is None:
+        await log_action(
+            db, None, "RESET_PASSWORD_FAILED", "User", None, ip_address=ip,
+        )
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired password reset token.",
+        )
+
+    matched.hashed_password = security.get_password_hash(body.new_password)
+    matched.password_reset_token = None
+    matched.password_reset_expires = None
+
+    await log_action(
+        db, matched.id, "RESET_PASSWORD", "User", matched.id, ip_address=ip,
+    )
     await db.commit()

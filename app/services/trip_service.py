@@ -4,10 +4,10 @@ Computes route_stops and telemetry alongside the standard Trip fields so
 both routes return a consistent detail payload. Also exposes is_late_now
 (view-time) for active trips that have run past the grace period.
 """
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, date, timedelta, timezone
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import cast, select, update, Date as SADate
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -18,6 +18,42 @@ from app.models.models import (
     Trip,
     TripStatus,
 )
+
+
+def active_trip_filter(today: Optional[date] = None):
+    """Return SQLAlchemy filter clauses identifying trips that are still
+    considered active for listing purposes.
+
+    Use as: `select(Trip).where(*active_trip_filter())`. This ensures both
+    the persisted `is_active` flag and the date-based rule are applied
+    consistently across endpoints.
+    """
+    today = today or datetime.now(timezone.utc).date()
+    return (
+        Trip.is_active == True,  # noqa: E712 — SQL boolean
+        cast(Trip.scheduled_start, SADate) >= today,
+    )
+
+
+async def deactivate_expired_trips(db: AsyncSession, today: Optional[date] = None) -> int:
+    """Set `is_active = False` for every trip whose scheduled_start date is
+    earlier than today. Returns the number of rows affected.
+
+    Idempotent — only flips rows currently flagged active.
+    """
+    today = today or datetime.now(timezone.utc).date()
+    stmt = (
+        update(Trip)
+        .where(
+            Trip.is_active == True,  # noqa: E712
+            cast(Trip.scheduled_start, SADate) < today,
+        )
+        .values(is_active=False)
+    )
+    result = await db.execute(stmt)
+    if result.rowcount:
+        await db.commit()
+    return int(result.rowcount or 0)
 
 
 def _scheduled_end(trip: Trip) -> Optional[datetime]:

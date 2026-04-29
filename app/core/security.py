@@ -40,4 +40,38 @@ class SecurityUtils:
         """Generate a cryptographically secure opaque refresh token."""
         return secrets.token_urlsafe(48)
 
+    @staticmethod
+    def create_password_reset_token() -> str:
+        """Generate a cryptographically secure opaque password reset token.
+
+        The raw value is returned to the caller (so it can be emailed) but the
+        database only ever sees its hash — see `hash_password_reset_token`.
+        """
+        return secrets.token_urlsafe(48)
+
+    @staticmethod
+    def hash_password_reset_token(token: str) -> str:
+        """Hash a password-reset token before storing it.
+
+        Uses bcrypt for parity with stored passwords; this prevents a leaked
+        database from yielding usable reset tokens.
+        """
+        return bcrypt.hashpw(token.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+    @staticmethod
+    def verify_password_reset_token(token: str, hashed_token: str) -> bool:
+        """Constant-time-ish comparison against the stored bcrypt hash."""
+        if not token or not hashed_token:
+            return False
+        try:
+            return bcrypt.checkpw(token.encode("utf-8"), hashed_token.encode("utf-8"))
+        except ValueError:
+            return False
+
+
 security = SecurityUtils()
+
+
+# How long a password reset token remains valid. Hardcoded to 15 minutes per
+# the security audit; bumping this requires a fresh review of the threat model.
+PASSWORD_RESET_TOKEN_TTL_MINUTES = 15

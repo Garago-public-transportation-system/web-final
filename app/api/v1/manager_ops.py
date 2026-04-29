@@ -13,8 +13,17 @@ router = APIRouter(dependencies=[Depends(get_current_user_with_role(UserRole.MAN
 async def get_active_trips(db: Annotated[AsyncSession, Depends(get_db)], skip: int = 0, limit: int = 100):
     """
     Returns all currently active trips to monitor real-time crowding.
+
+    Filters out trips that have been auto-inactivated (scheduled for an
+    earlier date) so stale rows never leak into operational dashboards.
     """
-    stmt = select(Trip).where(Trip.status == TripStatus.ACTIVE).offset(skip).limit(limit)
+    from app.services.trip_service import active_trip_filter
+    stmt = (
+        select(Trip)
+        .where(Trip.status == TripStatus.ACTIVE, *active_trip_filter())
+        .offset(skip)
+        .limit(limit)
+    )
     result = await db.execute(stmt)
     return result.scalars().all()
 

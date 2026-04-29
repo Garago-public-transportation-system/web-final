@@ -60,6 +60,18 @@ async def midnight_reset_job():
         except Exception as e:
             logger.error(f"Midnight reset failed: {e}")
 
+
+async def expire_trips_job():
+    """Auto-inactivate trips whose scheduled_start is older than today."""
+    async with AsyncSessionLocal() as db:
+        try:
+            from app.services.trip_service import deactivate_expired_trips
+            flipped = await deactivate_expired_trips(db)
+            if flipped:
+                logger.info(f"Trip expiry job: deactivated {flipped} expired trip(s)")
+        except Exception as e:
+            logger.error(f"Trip expiry job failed: {e}")
+
 def start_scheduler():
     # Run every day at 05:30
     scheduler.add_job(
@@ -99,6 +111,16 @@ def start_scheduler():
         CronTrigger(hour=0, minute=0),
         id="midnight_reset",
         replace_existing=True
+    )
+
+    # Auto-inactivate expired trips: run shortly after midnight, then hourly as a safety net.
+    scheduler.add_job(
+        expire_trips_job,
+        CronTrigger(minute=1),
+        id="trip_expiry",
+        replace_existing=True,
+        misfire_grace_time=300,
+        max_instances=1,
     )
 
     scheduler.start()

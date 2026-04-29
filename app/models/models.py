@@ -311,6 +311,7 @@ class Trip(Base):
     # Flags
     is_extra_dispatch: Mapped[bool] = mapped_column(Boolean, default=False)
     is_late: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
     notes: Mapped[Optional[str]] = mapped_column(Text)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
@@ -320,6 +321,11 @@ class Trip(Base):
     vehicle: Mapped["Vehicle"] = relationship("Vehicle", back_populates="trips")
     route: Mapped["Route"] = relationship("Route", back_populates="trips")
     tickets: Mapped[List["Ticket"]] = relationship("Ticket", back_populates="trip")
+
+    @property
+    def trip_date(self) -> date:
+        """Date component of the trip's scheduled start — used for auto-inactivation."""
+        return self.scheduled_start.date() if self.scheduled_start else date.today()
 
 
 class GateLog(Base):

@@ -61,7 +61,10 @@ app.add_middleware(SanitizationMiddleware)
 app.add_middleware(IdempotencyMiddleware)
 
 # Include Routers
-from app.api.v1 import admin, manager, driver, websocket, users, drivers, vehicles, routes, tickets, hardware, manager_ops
+from app.api.v1 import (
+    admin, manager, driver, websocket, users, drivers, vehicles, routes,
+    tickets, hardware, manager_ops, maintenance, profile,
+)
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(hardware.router, prefix="/api/v1/hardware", tags=["Hardware"])
@@ -73,6 +76,10 @@ app.include_router(drivers.router, prefix="/api/v1/admin/drivers", tags=["Admin 
 app.include_router(vehicles.router, prefix="/api/v1/admin/vehicles", tags=["Admin Vehicles"])
 app.include_router(routes.router, prefix="/api/v1/admin/routes", tags=["Admin Routes"])
 app.include_router(tickets.router, prefix="/api/v1/admin/tickets", tags=["Admin Tickets"])
+
+# Self-service / cross-role endpoints
+app.include_router(maintenance.router, prefix="/api/v1", tags=["Maintenance"])
+app.include_router(profile.router, prefix="/api/v1/users", tags=["User Profile"])
 
 app.include_router(manager.router, prefix="/api/v1/manager", tags=["Manager"])
 app.include_router(driver.router, prefix="/api/v1/drivers", tags=["Driver"])

@@ -38,8 +38,14 @@ async def get_dashboard_stats(db: Annotated[AsyncSession, Depends(get_db)]):
     total_routes = await db.scalar(select(func.count(Route.id)))
     total_users = await db.scalar(select(func.count(User.id)))
     pending_maintenance = await db.scalar(select(func.count(MaintenanceRequest.id)).where(MaintenanceRequest.status == MaintenanceStatus.PENDING))
-    # Active trips: status=ACTIVE
-    active_trips = await db.scalar(select(func.count(Trip.id)).where(Trip.status == TripStatus.ACTIVE))
+    # Active trips: status=ACTIVE AND not auto-inactivated (expired by date)
+    from app.services.trip_service import active_trip_filter
+    active_trips = await db.scalar(
+        select(func.count(Trip.id)).where(
+            Trip.status == TripStatus.ACTIVE,
+            *active_trip_filter(),
+        )
+    )
     
     # Calculate trips per route for the chart
     stmt = select(Route.name, func.count(Trip.id)).outerjoin(Trip).group_by(Route.id, Route.name)

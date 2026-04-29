@@ -1,4 +1,3 @@
-import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import React from 'react';
 import './index.css';
@@ -14,12 +13,14 @@ const DirectionSync = ({ children }) => {
   return children;
 };
 
+// StrictMode intentionally double-invokes effects in dev to surface bugs.
+// Disabled here because it causes every API call to appear twice in the
+// backend log during development, which was confusing during debugging.
+// Production builds are unaffected — StrictMode only does anything in dev.
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <DirectionSync>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </DirectionSync>
-  </StrictMode>,
+  <DirectionSync>
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  </DirectionSync>,
 );
