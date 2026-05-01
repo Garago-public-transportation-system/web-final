@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta, time, timezone
 from typing import List, Optional
-from sqlalchemy import select, and_, or_, func
+from sqlalchemy import select, and_, or_, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.models import Driver, Route, Vehicle, RotationAssignment, ShiftType, RotationPosition, DriverStatus, VehicleStatus, Trip, TripDirection, TripStatus, DriverExchange, ReplacementReason
 import logging
@@ -26,10 +26,17 @@ async def generate_daily_schedule(db: AsyncSession, target_date: date, regenerat
             logger.info(f"Regenerating assignments for {target_date}. Deleting existing {existing_count} rows.")
             from sqlalchemy import delete, cast, Date
             from app.models.models import Ticket
-            # Subqueries for trip/assignment IDs on this date
             trip_ids_stmt = select(Trip.id).where(cast(Trip.scheduled_start, Date) == target_date)
             rotation_ids_stmt = select(RotationAssignment.id).where(RotationAssignment.shift_date == target_date)
-            # Delete DriverExchange first — it FKs both rotation_assignments AND trips
+
+            # Collect affected driver/vehicle IDs before deleting
+            affected = (await db.execute(
+                select(Trip.driver_id, Trip.vehicle_id).where(cast(Trip.scheduled_start, Date) == target_date)
+            )).all()
+            driver_ids = list({r[0] for r in affected if r[0]})
+            vehicle_ids = list({r[1] for r in affected if r[1]})
+
+            # Delete DriverExchange first — FKs both rotation_assignments AND trips
             await db.execute(
                 delete(DriverExchange).where(
                     or_(
@@ -38,11 +45,27 @@ async def generate_daily_schedule(db: AsyncSession, target_date: date, regenerat
                     )
                 )
             )
-            # Delete remaining child records
             await db.execute(delete(Ticket).where(Ticket.trip_id.in_(trip_ids_stmt)))
-            # Now safe to delete trips and assignments
             await db.execute(delete(Trip).where(cast(Trip.scheduled_start, Date) == target_date))
             await db.execute(delete(RotationAssignment).where(RotationAssignment.shift_date == target_date))
+
+            # Reset affected drivers and vehicles so they're available for the new schedule
+            if driver_ids:
+                await db.execute(
+                    update(Driver).where(Driver.id.in_(driver_ids)).values(
+                        status=DriverStatus.OFF_DUTY,
+                        current_vehicle_id=None,
+                        current_route_id=None,
+                        current_shift=None,
+                        shift_start_time=None,
+                        shift_end_time=None,
+                    )
+                )
+            if vehicle_ids:
+                await db.execute(
+                    update(Vehicle).where(Vehicle.id.in_(vehicle_ids)).values(status=VehicleStatus.FREE)
+                )
+
             await db.commit()
     
     # 1. Fetch active routes
@@ -74,7 +97,7 @@ async def generate_daily_schedule(db: AsyncSession, target_date: date, regenerat
 
     for route in routes:
         for shift_type, start_hour, end_hour in shifts:
-            # GAP-04: don't silently break — record the skip and keep generating
+            # Don't silently break — record the skip and keep generating
             # the remaining routes/shifts so the admin sees what couldn't be staffed.
             if len(available_drivers) < 3 or len(available_vehicles) < 2:
                 reason = (
@@ -171,7 +194,7 @@ async def generate_daily_schedule(db: AsyncSession, target_date: date, regenerat
     
     await db.commit()
 
-    # Notify admins about routes that couldn't be staffed (GAP-04).
+    # Notify admins about routes that couldn't be staffed.
     if skipped_routes:
         try:
             from app.services.notification_service import create_notification
@@ -314,16 +337,259 @@ async def _perform_swap(db: AsyncSession, outgoing: RotationAssignment, incoming
     )
     db.add(exchange)
 
+async def assign_break_replacement(
+    db: AsyncSession,
+    outgoing_driver: Driver,
+    break_log,
+) -> Optional[Driver]:
+    """
+    When a driver goes on break, find a replacement and hand off any of their
+    SCHEDULED trips that haven't started yet.
+
+    Replacement priority (today's roster first, then anyone available):
+      1. Inactive D3 on the same route as the outgoing driver
+      2. Any rostered driver today whose RotationAssignment is inactive
+      3. Any ACTIVE driver not currently driving (no ACTIVE trip)
+      4. Any OFF_DUTY driver who could be pulled in
+
+    Returns the replacement Driver, or None if no replacement was found.
+    """
+    today = datetime.now(timezone.utc).date()
+    now = datetime.now(timezone.utc)
+
+    # Outgoing driver's rotation assignment for today (used for FK + route lookup)
+    outgoing_assignment = await db.scalar(
+        select(RotationAssignment).where(
+            RotationAssignment.driver_id == outgoing_driver.id,
+            RotationAssignment.shift_date == today,
+        ).limit(1)
+    )
+
+    # 1. Same-route inactive D3 (the canonical "rest" driver for that bus)
+    replacement: Optional[Driver] = None
+    if outgoing_assignment:
+        replacement = await db.scalar(
+            select(Driver)
+            .join(RotationAssignment, RotationAssignment.driver_id == Driver.id)
+            .where(
+                RotationAssignment.shift_date == today,
+                RotationAssignment.route_id == outgoing_assignment.route_id,
+                RotationAssignment.position == RotationPosition.DRIVER_3,
+                RotationAssignment.is_active == False,  # noqa: E712
+                Driver.id != outgoing_driver.id,
+                Driver.status.in_([DriverStatus.ACTIVE, DriverStatus.ON_BREAK]),
+            )
+            .limit(1)
+            .with_for_update()
+        )
+
+    # 2. Any rostered, currently-inactive driver
+    if replacement is None:
+        replacement = await db.scalar(
+            select(Driver)
+            .join(RotationAssignment, RotationAssignment.driver_id == Driver.id)
+            .where(
+                RotationAssignment.shift_date == today,
+                RotationAssignment.is_active == False,  # noqa: E712
+                Driver.id != outgoing_driver.id,
+                Driver.status == DriverStatus.ACTIVE,
+            )
+            .limit(1)
+            .with_for_update()
+        )
+
+    # 3. Any ACTIVE driver not currently on a trip
+    if replacement is None:
+        busy_driver_ids = (await db.execute(
+            select(Trip.driver_id).where(Trip.status == TripStatus.ACTIVE)
+        )).scalars().all()
+        replacement = await db.scalar(
+            select(Driver)
+            .where(
+                Driver.id != outgoing_driver.id,
+                Driver.status == DriverStatus.ACTIVE,
+                ~Driver.id.in_(busy_driver_ids) if busy_driver_ids else Driver.id == Driver.id,
+                Driver.fatigue_score <= 80.0,
+            )
+            .limit(1)
+            .with_for_update()
+        )
+
+    # 4. Any OFF_DUTY driver as last resort
+    if replacement is None:
+        replacement = await db.scalar(
+            select(Driver)
+            .where(
+                Driver.status == DriverStatus.OFF_DUTY,
+                Driver.id != outgoing_driver.id,
+                Driver.fatigue_score <= 80.0,
+            )
+            .limit(1)
+            .with_for_update()
+        )
+
+    if replacement is None:
+        logger.warning(
+            f"No replacement found for break: driver={outgoing_driver.id} on {today}"
+        )
+        return None
+
+    # Hand off SCHEDULED trips that haven't started yet to the replacement.
+    pending_trips = (await db.execute(
+        select(Trip).where(
+            Trip.driver_id == outgoing_driver.id,
+            Trip.status == TripStatus.SCHEDULED,
+            Trip.scheduled_start >= now,
+        )
+    )).scalars().all()
+    for t in pending_trips:
+        t.driver_id = replacement.id
+
+    # Activate replacement: flip rotation flags + driver status.
+    if outgoing_assignment:
+        outgoing_assignment.is_active = False
+    replacement_assignment = await db.scalar(
+        select(RotationAssignment).where(
+            RotationAssignment.driver_id == replacement.id,
+            RotationAssignment.shift_date == today,
+        ).limit(1)
+    )
+    if replacement_assignment:
+        replacement_assignment.is_active = True
+        if not replacement_assignment.shift_start_time:
+            replacement_assignment.shift_start_time = now
+
+    # Replacement keeps ACTIVE; do not override ON_TRIP if they're already on one
+    if replacement.status not in (DriverStatus.ON_TRIP,):
+        replacement.status = DriverStatus.ACTIVE
+    if replacement.status == DriverStatus.OFF_DUTY:
+        replacement.shift_start_time = now
+
+    # DriverExchange row (require a valid rotation_assignment FK)
+    rotation_id_for_exchange = (
+        outgoing_assignment.id if outgoing_assignment else
+        (replacement_assignment.id if replacement_assignment else None)
+    )
+    if rotation_id_for_exchange is not None:
+        db.add(DriverExchange(
+            rotation_assignment_id=rotation_id_for_exchange,
+            outgoing_driver_id=outgoing_driver.id,
+            incoming_driver_id=replacement.id,
+            reason=ReplacementReason.BREAK,
+            exchange_time=now,
+            trip_id=None,
+            notes=f"Break replacement: covering {len(pending_trips)} pending trip(s)",
+        ))
+
+    # Annotate the BreakLog with the replacement
+    if break_log is not None:
+        break_log.replaced_by_driver_id = replacement.id
+
+    # Notify both drivers
+    try:
+        from app.services.notification_service import create_notification
+        await create_notification(
+            db=db,
+            user_id=replacement.user_id,
+            title="You're covering a break",
+            message=(
+                f"Driver {outgoing_driver.id} is on break. "
+                f"{len(pending_trips)} pending trip(s) reassigned to you."
+            ),
+            type="break_replacement",
+        )
+        await create_notification(
+            db=db,
+            user_id=outgoing_driver.user_id,
+            title="Break started",
+            message=f"Replacement assigned. {len(pending_trips)} pending trip(s) handed off.",
+            type="break_started",
+        )
+    except Exception as exc:
+        logger.warning(f"Break-replacement notification failed: {exc}")
+
+    return replacement
+
+
+async def release_break_replacement(
+    db: AsyncSession,
+    returning_driver: Driver,
+) -> Optional[Driver]:
+    """
+    When a driver returns from break, close out the open BREAK exchange:
+      - return SCHEDULED-not-started trips to the original driver
+      - set DriverExchange.return_time
+      - flip rotation is_active back
+
+    Best-effort: if the replacement is mid-trip, that trip stays with them.
+    """
+    now = datetime.now(timezone.utc)
+    today = now.date()
+
+    exchange = await db.scalar(
+        select(DriverExchange).where(
+            DriverExchange.outgoing_driver_id == returning_driver.id,
+            DriverExchange.reason == ReplacementReason.BREAK,
+            DriverExchange.return_time.is_(None),
+        ).order_by(DriverExchange.exchange_time.desc()).limit(1)
+    )
+    if not exchange:
+        return None
+
+    replacement = await db.scalar(
+        select(Driver).where(Driver.id == exchange.incoming_driver_id)
+    )
+
+    # Return any trips that haven't started yet to the original driver.
+    if replacement is not None:
+        pending_trips = (await db.execute(
+            select(Trip).where(
+                Trip.driver_id == replacement.id,
+                Trip.status == TripStatus.SCHEDULED,
+                Trip.scheduled_start >= now,
+            )
+        )).scalars().all()
+        for t in pending_trips:
+            t.driver_id = returning_driver.id
+
+    exchange.return_time = now
+
+    # Restore rotation flags
+    outgoing_assignment = await db.scalar(
+        select(RotationAssignment).where(
+            RotationAssignment.driver_id == returning_driver.id,
+            RotationAssignment.shift_date == today,
+        ).limit(1)
+    )
+    if outgoing_assignment:
+        outgoing_assignment.is_active = True
+
+    if replacement is not None:
+        replacement_assignment = await db.scalar(
+            select(RotationAssignment).where(
+                RotationAssignment.driver_id == replacement.id,
+                RotationAssignment.shift_date == today,
+            ).limit(1)
+        )
+        if replacement_assignment and replacement_assignment.position == RotationPosition.DRIVER_3:
+            # D3 returns to standby unless they're mid-trip
+            replacement_assignment.is_active = False
+
+    return replacement
+
+
 async def trigger_auto_dispatch(trip_id: int, db: AsyncSession) -> bool:
     """
     Finds an available driver and vehicle to dispatch for an overloaded route.
     Returns True if successful, False if no resources available.
 
-    Driver-selection priority (each candidate is also gated by fatigue_score <= 80):
-      1. ACTIVE  drivers assigned as DRIVER_3 today
-      2. ON_BREAK drivers assigned as DRIVER_3 today
-      3. Any ACTIVE  driver rostered today (regardless of position)
-      4. Any ON_BREAK driver rostered today (regardless of position)
+    Driver-selection priority (fatigue_score <= 80 required):
+      1. ACTIVE  drivers assigned as DRIVER_3 today (rostered)
+      2. ON_BREAK drivers assigned as DRIVER_3 today (rostered)
+      3. Any ACTIVE  driver rostered today
+      4. Any ON_BREAK driver rostered today
+      5. Fallback: any OFF_DUTY driver (not yet started shift) — used when
+         no roster exists (e.g. manual/testing scenarios)
     """
     trip = await db.scalar(select(Trip).where(Trip.id == trip_id))
     if not trip:
@@ -331,32 +597,44 @@ async def trigger_auto_dispatch(trip_id: int, db: AsyncSession) -> bool:
 
     today = datetime.now(timezone.utc).date()
 
-    async def _pick(status_value: DriverStatus, only_d3: bool) -> Optional[Driver]:
+    async def _pick_rostered(status_value: DriverStatus, only_d3: bool) -> Optional[Driver]:
         stmt = (
             select(Driver)
             .join(RotationAssignment, Driver.id == RotationAssignment.driver_id)
             .where(
                 Driver.status == status_value,
                 RotationAssignment.shift_date == today,
-                Driver.id != trip.driver_id,  # never relieve the overloaded trip with its own driver
+                Driver.id != trip.driver_id,
+                Driver.fatigue_score <= 80.0,
             )
         )
         if only_d3:
             stmt = stmt.where(RotationAssignment.position == RotationPosition.DRIVER_3)
-        # Fatigue gate (GAP-05): only dispatch drivers below the fatigue ceiling.
-        stmt = stmt.where(Driver.fatigue_score <= 80.0)
         return await db.scalar(stmt.limit(1).with_for_update())
 
+    async def _pick_any_off_duty() -> Optional[Driver]:
+        return await db.scalar(
+            select(Driver)
+            .where(
+                Driver.status == DriverStatus.OFF_DUTY,
+                Driver.id != trip.driver_id,
+                Driver.fatigue_score <= 80.0,
+            )
+            .limit(1)
+            .with_for_update()
+        )
+
     driver = (
-        await _pick(DriverStatus.ACTIVE,   only_d3=True)
-        or await _pick(DriverStatus.ON_BREAK, only_d3=True)
-        or await _pick(DriverStatus.ACTIVE,   only_d3=False)
-        or await _pick(DriverStatus.ON_BREAK, only_d3=False)
+        await _pick_rostered(DriverStatus.ACTIVE,   only_d3=True)
+        or await _pick_rostered(DriverStatus.ON_BREAK, only_d3=True)
+        or await _pick_rostered(DriverStatus.ACTIVE,   only_d3=False)
+        or await _pick_rostered(DriverStatus.ON_BREAK, only_d3=False)
+        or await _pick_any_off_duty()
     )
     if not driver:
         logger.warning(
-            f"Auto-dispatch failed for trip {trip_id}: no rested driver available "
-            f"(checked D3 ACTIVE, D3 ON_BREAK, any ACTIVE, any ON_BREAK; fatigue_score<=80)."
+            f"Auto-dispatch failed for trip {trip_id}: no available driver "
+            f"(checked rostered ACTIVE/ON_BREAK and OFF_DUTY fallback; fatigue_score<=80)."
         )
         return False
         

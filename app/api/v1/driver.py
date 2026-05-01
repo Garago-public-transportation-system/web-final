@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.config import settings
 from app.api.deps import get_current_user_with_role
-from app.models.models import UserRole, Driver, Trip, BreakLog, DriverStatus, TripStatus, Ticket, Vehicle, VehicleStatus, RerouteLog, RerouteStatus, Notification, NotificationStatus, Route
-from app.schemas.schemas import DriverResponse, TripResponse, BreakLogResponse, RerouteRequest, RerouteLogResponse, NotificationResponse, DriverTicketIssueRequest, TicketResponse
+from app.models.models import UserRole, Driver, Trip, BreakLog, DriverStatus, TripStatus, Ticket, Vehicle, VehicleStatus, RerouteLog, RerouteStatus, Notification, NotificationStatus, Route, GpsTracking
+from app.schemas.schemas import DriverResponse, TripResponse, BreakLogResponse, RerouteRequest, RerouteLogResponse, NotificationResponse, DriverTicketIssueRequest, TicketResponse, DriverGpsIngest
 from app.services.break_service import start_break, end_break, get_break_status
 
 router = APIRouter(dependencies=[Depends(get_current_user_with_role(UserRole.DRIVER))])
@@ -33,7 +33,8 @@ async def get_my_trips(db: Annotated[AsyncSession, Depends(get_db)], current_use
     from app.models.models import Route
     stmt = select(Trip).options(
         selectinload(Trip.route).selectinload(Route.stops),
-        selectinload(Trip.vehicle)
+        selectinload(Trip.vehicle),
+        selectinload(Trip.driver).selectinload(Driver.user)
     ).where(Trip.driver_id == driver.id).order_by(Trip.scheduled_start.desc()).offset(skip).limit(limit)
     result = await db.execute(stmt)
     return result.scalars().all()
@@ -129,8 +130,9 @@ async def start_trip(
     from app.models.models import Route
     stmt = select(Trip).options(
         selectinload(Trip.route).selectinload(Route.stops),
-        selectinload(Trip.vehicle)
-    ).where(Trip.id == trip_id)
+        selectinload(Trip.vehicle),
+        selectinload(Trip.driver).selectinload(Driver.user)
+    ).where(Trip.id == trip_id, Trip.driver_id == driver.id)
     result = await db.execute(stmt)
     trip = result.scalars().first()
     return trip
@@ -204,7 +206,8 @@ async def end_trip(
     from app.models.models import Route
     reload_stmt = select(Trip).options(
         selectinload(Trip.route).selectinload(Route.stops),
-        selectinload(Trip.vehicle)
+        selectinload(Trip.vehicle),
+        selectinload(Trip.driver).selectinload(Driver.user)
     ).where(Trip.id == trip_id)
     reload_result = await db.execute(reload_stmt)
     trip = reload_result.scalars().first()
@@ -466,9 +469,8 @@ async def issue_ticket_for_my_trip(
             break
 
     # Server-side price: route fare, never the client.
-    DEFAULT_TICKET_FARE = 15.0
     route = await db.get(Route, trip.route_id)
-    ticket_price = route.fare if route and route.fare > 0 else DEFAULT_TICKET_FARE
+    ticket_price = route.fare if route and route.fare > 0 else settings.DEFAULT_TICKET_FARE
 
     ticket = Ticket(
         trip_id=trip_id,
@@ -483,3 +485,80 @@ async def issue_ticket_for_my_trip(
     await db.commit()
     await db.refresh(ticket)
     return ticket
+
+
+@router.post("/me/gps", status_code=204)
+async def ingest_driver_gps(
+    payload: DriverGpsIngest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user=Depends(get_current_user_with_role(UserRole.DRIVER)),
+):
+    """
+    Driver mobile app pushes a single GPS sample.
+
+    Resolves the driver, finds their currently active trip (if any), updates
+    the vehicle's `current_latitude`/`current_longitude`, persists a
+    `gps_tracking` row, and broadcasts a `gps_update` event to MANAGER and
+    ADMIN over WebSocket so the live fleet feed stays in sync.
+    """
+    from app.core.sockets import manager
+    from sqlalchemy.orm import selectinload
+
+    driver_res = await db.execute(
+        select(Driver)
+        .options(selectinload(Driver.user))
+        .where(Driver.user_id == current_user.id)
+    )
+    driver = driver_res.scalar_one_or_none()
+    if not driver:
+        raise HTTPException(status_code=404, detail="Driver profile not found")
+
+    # Active trip wins over assigned vehicle (driver may swap mid-shift).
+    active_trip = await db.scalar(
+        select(Trip)
+        .where(Trip.driver_id == driver.id, Trip.status == TripStatus.ACTIVE)
+        .order_by(Trip.actual_start.desc())
+        .limit(1)
+    )
+
+    vehicle_id = (active_trip.vehicle_id if active_trip else driver.current_vehicle_id)
+    if not vehicle_id:
+        # GPS without an associated vehicle is not useful for fleet tracking.
+        raise HTTPException(
+            status_code=400,
+            detail="No active trip or assigned vehicle for this driver.",
+        )
+
+    vehicle = await db.get(Vehicle, vehicle_id)
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+
+    recorded_at = payload.recorded_at or datetime.now(timezone.utc)
+
+    vehicle.current_latitude = payload.latitude
+    vehicle.current_longitude = payload.longitude
+
+    db.add(GpsTracking(
+        vehicle_id=vehicle.id,
+        trip_id=active_trip.id if active_trip else None,
+        latitude=payload.latitude,
+        longitude=payload.longitude,
+        recorded_at=recorded_at,
+    ))
+
+    await db.commit()
+
+    event = {
+        "type": "gps_update",
+        "driver_id": driver.id,
+        "driver_name": current_user.full_name,
+        "vehicle_id": vehicle.id,
+        "plate_number": vehicle.plate_number,
+        "trip_id": active_trip.id if active_trip else None,
+        "latitude": payload.latitude,
+        "longitude": payload.longitude,
+        "recorded_at": recorded_at.isoformat(),
+    }
+    await manager.broadcast_to_role("MANAGER", event)
+    await manager.broadcast_to_role("ADMIN", event)
+    return

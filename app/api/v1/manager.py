@@ -125,3 +125,58 @@ async def mark_notification_read(
         await db.commit()
         await db.refresh(notif)
     return notif
+
+
+# --- Live fleet GPS feed ---
+@router.get("/fleet/live")
+async def get_fleet_live(db: Annotated[AsyncSession, Depends(get_db)]):
+    """
+    Latest GPS position per vehicle, with the active trip and current driver
+    when available. Used to seed the manager dashboard live feed; subsequent
+    updates arrive via WebSocket `gps_update` events.
+    """
+    from sqlalchemy import desc
+    from sqlalchemy.orm import selectinload
+    from app.models.models import GpsTracking, User
+
+    # Pull each vehicle's most recent GPS row. Bounded fan-out: one query per
+    # vehicle, limited to vehicles the manager actually cares about.
+    vehicles_res = await db.execute(select(Vehicle))
+    vehicles = vehicles_res.scalars().all()
+
+    items: list[dict] = []
+    for v in vehicles:
+        last = await db.scalar(
+            select(GpsTracking)
+            .where(GpsTracking.vehicle_id == v.id)
+            .order_by(desc(GpsTracking.recorded_at))
+            .limit(1)
+        )
+
+        active_trip = await db.scalar(
+            select(Trip)
+            .options(selectinload(Trip.driver).selectinload(Driver.user))
+            .where(Trip.vehicle_id == v.id, Trip.status == TripStatus.ACTIVE)
+            .limit(1)
+        )
+
+        driver_name = None
+        driver_id = None
+        if active_trip and active_trip.driver and active_trip.driver.user:
+            driver_name = active_trip.driver.user.full_name
+            driver_id = active_trip.driver.id
+
+        items.append({
+            "vehicle_id": v.id,
+            "plate_number": v.plate_number,
+            "model": v.model,
+            "status": v.status.value if hasattr(v.status, "value") else str(v.status),
+            "trip_id": active_trip.id if active_trip else None,
+            "driver_id": driver_id,
+            "driver_name": driver_name,
+            "latitude": (last.latitude if last else v.current_latitude),
+            "longitude": (last.longitude if last else v.current_longitude),
+            "recorded_at": (last.recorded_at.isoformat() if last and last.recorded_at else None),
+        })
+
+    return items

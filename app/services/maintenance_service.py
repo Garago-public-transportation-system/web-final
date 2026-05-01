@@ -33,14 +33,24 @@ async def create_maintenance_request(
 
     # If EMERGENCY, notify managers
     if type == MaintenanceType.EMERGENCY:
-        # TODO: Ideally fetch all managers and notify them. 
-        # For now, simplistic approach or delegate to another service?
-        # Let's just create a generic notification for now, targeting no specific user ID yet?
-        # Or loop through managers.
-        # Since I don't have user logic here easily, I might skip mass notification or do it later.
-        # But wait, create_notification requires user_id.
-        # I'll rely on the caller or a separate background task for mass notification if strictly needed.
-        pass
+        try:
+            from sqlalchemy import select
+            from app.models.models import User, UserRole
+            manager_ids = (await db.execute(
+                select(User.id).where(User.role == UserRole.MANAGER, User.is_active == True)
+            )).scalars().all()
+            for manager_id in manager_ids:
+                await create_notification(
+                    db=db,
+                    user_id=manager_id,
+                    title="EMERGENCY Maintenance Request",
+                    message=f"New emergency maintenance requested for vehicle #{vehicle_id}: {title}",
+                    type="MAINTENANCE"
+                )
+        except Exception as exc:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.exception(f"Failed to notify managers of emergency maintenance: {exc}")
 
     await log_action(db, user_id, "CREATE", "MaintenanceRequest", request.id, new_values={"title": title, "type": type})
     return request

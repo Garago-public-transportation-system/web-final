@@ -80,7 +80,7 @@ async def update_late_trips(db: AsyncSession) -> int:
     """Persist `is_late=True` on every ACTIVE trip whose scheduled_end + grace
     has elapsed. Returns the number of rows flipped.
 
-    GAP-06: Without this, DailyReport.on_time_percentage is always 100% because
+    Without this, DailyReport.on_time_percentage is always 100% because
     `is_late` is never written after trip creation.
     """
     from sqlalchemy.orm import selectinload
@@ -90,7 +90,7 @@ async def update_late_trips(db: AsyncSession) -> int:
 
     candidates = (await db.execute(
         select(Trip)
-        .options(selectinload(Trip.route))
+        .options(selectinload(Trip.route), selectinload(Trip.driver).selectinload(Driver.user))
         .where(
             Trip.status == TripStatus.ACTIVE,
             Trip.is_late == False,  # noqa: E712 — SQL boolean, not Python `not`
@@ -98,6 +98,7 @@ async def update_late_trips(db: AsyncSession) -> int:
     )).scalars().all()
 
     flipped = 0
+    newly_late_trips = []
     for trip in candidates:
         sched_end = _scheduled_end(trip)
         if not sched_end:
@@ -108,10 +109,128 @@ async def update_late_trips(db: AsyncSession) -> int:
         if sched_end < cutoff:
             trip.is_late = True
             flipped += 1
+            newly_late_trips.append(trip)
 
     if flipped:
         await db.commit()
+        # Send notifications and WebSocket alerts for newly-late trips
+        await _alert_late_trips(db, newly_late_trips)
     return flipped
+
+
+async def _alert_late_trips(db: AsyncSession, trips: list):
+    """Send notifications to driver, managers, and admins for late trips."""
+    import logging
+    from app.services.notification_service import create_notification
+    from app.services.audit_service import log_action
+    from app.core.sockets import manager as socket_manager
+    from app.models.models import User, UserRole
+    from sqlalchemy import select as sa_select
+
+    logger = logging.getLogger(__name__)
+
+    # Fetch manager and admin user IDs once
+    manager_ids = (await db.execute(
+        sa_select(User.id).where(User.role == UserRole.MANAGER, User.is_active == True)
+    )).scalars().all()
+    admin_ids = (await db.execute(
+        sa_select(User.id).where(User.role == UserRole.ADMIN, User.is_active == True)
+    )).scalars().all()
+
+    for trip in trips:
+        trip_label = trip.trip_number or f"Trip #{trip.id}"
+        route_name = trip.route.name if trip.route else "Unknown route"
+        sched_end = _scheduled_end(trip)
+        end_str = sched_end.strftime("%H:%M") if sched_end else "N/A"
+        now_str = datetime.now(timezone.utc).strftime("%H:%M")
+        delay_mins = ""
+        if sched_end:
+            delta = datetime.now(timezone.utc) - sched_end
+            delay_mins = f"{int(delta.total_seconds() // 60)} min"
+
+        # 1. Notify the driver
+        if trip.driver and trip.driver.user_id:
+            try:
+                await create_notification(
+                    db=db,
+                    user_id=trip.driver.user_id,
+                    title="⚠️ Trip overdue — please finish",
+                    message=(
+                        f"Your trip {trip_label} on {route_name} was scheduled to end at {end_str} UTC "
+                        f"but is now {delay_mins} late. Please complete it as soon as possible."
+                    ),
+                    type="TRIP_LATE",
+                )
+            except Exception as exc:
+                logger.warning(f"Failed to notify driver for late trip {trip.id}: {exc}")
+
+        # 2. Notify managers
+        for uid in manager_ids:
+            try:
+                await create_notification(
+                    db=db,
+                    user_id=uid,
+                    title="🔴 Late trip alert",
+                    message=(
+                        f"{trip_label} on {route_name} is {delay_mins} past its scheduled end ({end_str} UTC). "
+                        f"Driver: {trip.driver.user.full_name if trip.driver and hasattr(trip.driver, 'user') and trip.driver.user else 'Unknown'}."
+                    ),
+                    type="TRIP_LATE",
+                )
+            except Exception as exc:
+                logger.warning(f"Failed to notify manager {uid} for late trip {trip.id}: {exc}")
+
+        # 3. Notify admins
+        for uid in admin_ids:
+            try:
+                await create_notification(
+                    db=db,
+                    user_id=uid,
+                    title="🔴 Late trip alert",
+                    message=(
+                        f"{trip_label} on {route_name} is {delay_mins} past its scheduled end ({end_str} UTC). "
+                        f"Driver: {trip.driver.user.full_name if trip.driver and hasattr(trip.driver, 'user') and trip.driver.user else 'Unknown'}."
+                    ),
+                    type="TRIP_LATE",
+                )
+            except Exception as exc:
+                logger.warning(f"Failed to notify admin {uid} for late trip {trip.id}: {exc}")
+
+        # 4. Audit log entry — shows up in Dashboard "System Alerts"
+        try:
+            await log_action(
+                db=db,
+                user_id=None,  # system-generated
+                action="LATE_TRIP",
+                entity_type="Trip",
+                entity_id=trip.id,
+                new_values={
+                    "trip_number": trip_label,
+                    "route": route_name,
+                    "delay": delay_mins,
+                    "scheduled_end": end_str,
+                },
+            )
+        except Exception as exc:
+            logger.warning(f"Failed to create audit entry for late trip {trip.id}: {exc}")
+
+        # 5. WebSocket real-time alert to MANAGER and ADMIN dashboards
+        ws_payload = {
+            "type": "late_trip_alert",
+            "severity": "HIGH",
+            "trip_id": trip.id,
+            "trip_number": trip_label,
+            "route_name": route_name,
+            "delay_minutes": delay_mins,
+            "message": f"LATE TRIP: {trip_label} on {route_name} is {delay_mins} overdue.",
+        }
+        try:
+            await socket_manager.broadcast_to_role("MANAGER", ws_payload)
+            await socket_manager.broadcast_to_role("ADMIN", ws_payload)
+        except Exception as exc:
+            logger.warning(f"Failed to broadcast late trip WS alert for trip {trip.id}: {exc}")
+
+    await db.commit()
 
 
 async def build_trip_detail(trip_id: int, db: AsyncSession) -> Optional[dict]:

@@ -260,17 +260,18 @@ const SEVERITY = {
 };
 
 const AlertRow = ({ a }) => {
-    const sev = a.action?.includes('DELETE') || a.action?.includes('REJECT')
+    const sev = a.action?.includes('DELETE') || a.action?.includes('REJECT') || a.action?.includes('LATE_TRIP')
         ? 'crit'
-        : a.action?.includes('CREATE') || a.action?.includes('APPROVE')
+        : a.action?.includes('CREATE') || a.action?.includes('APPROVE') || a.action?.includes('LOGIN')
             ? 'ok'
             : 'warn';
     const cfg = SEVERITY[sev];
-    const at = a.timestamp
-        ? new Date(a.timestamp).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    const ts = a.timestamp || a.created_at;
+    const at = ts
+        ? new Date(ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
         : '—';
-    const date = a.timestamp
-        ? new Date(a.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+    const date = ts
+        ? new Date(ts).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
         : '';
     return (
         <div
@@ -316,9 +317,9 @@ const AlertRow = ({ a }) => {
             <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontSize: 13, lineHeight: 1.4, fontWeight: 500 }}>
                     {a.action || 'EVENT'}
-                    {a.target_type ? (
+                    {(a.target_type || a.entity_type) ? (
                         <span className="muted mono text-xs" style={{ marginLeft: 6 }}>
-                            · {a.target_type}{a.target_id != null ? ` #${a.target_id}` : ''}
+                            · {a.target_type || a.entity_type}{(a.target_id ?? a.entity_id) != null ? ` #${a.target_id ?? a.entity_id}` : ''}
                         </span>
                     ) : null}
                 </div>

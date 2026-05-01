@@ -278,6 +278,12 @@ class CameraData(BaseModel):
     trip_id: int
     passenger_count: int
 
+# --- Driver GPS Ingest ---
+class DriverGpsIngest(BaseModel):
+    latitude: float = Field(..., ge=-90.0, le=90.0)
+    longitude: float = Field(..., ge=-180.0, le=180.0)
+    recorded_at: Optional[datetime] = None
+
 # --- Maintenance ---
 class MaintenanceCreate(BaseSchema):
     vehicle_id: int
@@ -489,6 +495,10 @@ class ProfileUpdateRequest(BaseSchema):
 class ForgotPasswordRequest(BaseSchema):
     email: EmailStr
 
+
+class TripAssignRequest(BaseSchema):
+    driver_id: int
+    vehicle_id: Optional[int] = None  # auto-selects a FREE vehicle when omitted
 
 class ResetPasswordRequest(BaseSchema):
     token: str = Field(..., min_length=16, max_length=256)

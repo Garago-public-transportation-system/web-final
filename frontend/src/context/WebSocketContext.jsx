@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useAlertStore } from '../store/alertStore';
 
@@ -29,6 +29,8 @@ export const WebSocketProvider = ({ children }) => {
     const reconnectTimer = useRef(null);
     const didRefreshAfterAuthFail = useRef(false);
     const addAlert = useAlertStore((state) => state.addAlert);
+    const [lastNotification, setLastNotification] = useState(null);
+    const [gpsByVehicle, setGpsByVehicle] = useState({});
 
     const clearTimers = () => {
         if (heartbeatTimer.current) clearInterval(heartbeatTimer.current);
@@ -72,6 +74,15 @@ export const WebSocketProvider = ({ children }) => {
             try {
                 const data = JSON.parse(event.data);
                 if (data.type === 'pong') return;
+                if (data.type === 'gps_update' && data.vehicle_id != null) {
+                    setGpsByVehicle((prev) => ({
+                        ...prev,
+                        [data.vehicle_id]: { ...data, receivedAt: Date.now() },
+                    }));
+                    setLastNotification({ ...data, receivedAt: Date.now() });
+                    return;
+                }
+                setLastNotification({ ...data, receivedAt: Date.now() });
                 addAlert({
                     id: Date.now().toString() + Math.random().toString(),
                     timestamp: new Date(),
@@ -125,7 +136,7 @@ export const WebSocketProvider = ({ children }) => {
     }, [user, token]);
 
     return (
-        <WebSocketContext.Provider value={{}}>
+        <WebSocketContext.Provider value={{ lastNotification, gpsByVehicle }}>
             {children}
         </WebSocketContext.Provider>
     );

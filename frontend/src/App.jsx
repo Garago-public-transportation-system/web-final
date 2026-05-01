@@ -26,6 +26,7 @@ import ManagerMaintenance from './pages/Manager/Maintenance';
 import ManagerFleet from './pages/Manager/Fleet';
 import ManagerReroutes from './pages/Manager/Reroutes';
 import ManagerNotifications from './pages/Manager/Notifications';
+import ManagerReports from './pages/Manager/Reports';
 
 function App() {
   return (
@@ -60,6 +61,7 @@ function App() {
                 <Route path="/manager/fleet" element={<ErrorBoundary><ManagerFleet /></ErrorBoundary>} />
                 <Route path="/manager/reroutes" element={<ErrorBoundary><ManagerReroutes /></ErrorBoundary>} />
                 <Route path="/manager/notifications" element={<ErrorBoundary><ManagerNotifications /></ErrorBoundary>} />
+                <Route path="/manager/reports" element={<ErrorBoundary><ManagerReports /></ErrorBoundary>} />
               </Route>
             </Route>
 

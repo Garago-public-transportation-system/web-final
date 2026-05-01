@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,7 +42,7 @@ async def start_break(
         raise ValueError(f"Not enough break time remaining ({round(driver.break_time_remaining, 1)} min). Minimum break is {settings.MIN_BREAK_DURATION} min.")
 
     # Start Break
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     driver.status = DriverStatus.ON_BREAK
     driver.break_start_time = now
     driver.current_break_number += 1
@@ -73,7 +73,7 @@ async def end_break(
     if driver.status != DriverStatus.ON_BREAK or not driver.break_start_time:
         raise ValueError("Driver is not on break")
         
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     duration = (now - driver.break_start_time).total_seconds() / 60.0
     
     # L3: Enforce minimum break duration

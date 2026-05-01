@@ -384,7 +384,7 @@ const Drivers = () => {
                                     >
                                         Assignment & rating
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                         <div>
                                             <label>Vehicle ID</label>
                                             <div className="field">
@@ -405,18 +405,18 @@ const Drivers = () => {
                                                 />
                                             </div>
                                         </div>
-                                        <div>
-                                            <label>Rating (0-5)</label>
-                                            <div className="field">
-                                                <input
-                                                    type="number"
-                                                    step="0.1"
-                                                    min="0"
-                                                    max="5"
-                                                    value={form.rating ?? ''}
-                                                    onChange={(e) => setForm({ ...form, rating: e.target.value })}
-                                                />
-                                            </div>
+                                    </div>
+                                    <div>
+                                        <label>Rating (0-5)</label>
+                                        <div className="field">
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                min="0"
+                                                max="5"
+                                                value={form.rating ?? ''}
+                                                onChange={(e) => setForm({ ...form, rating: e.target.value })}
+                                            />
                                         </div>
                                     </div>
                                 </>

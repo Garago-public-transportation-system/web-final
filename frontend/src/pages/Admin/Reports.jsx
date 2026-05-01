@@ -29,9 +29,13 @@ const buildReportCards = (t) => [
     { key: 'AUDIT', icon: 'audit', label: t('reports.auditAct'), desc: t('reports.auditActDesc'), range: 30 },
 ];
 
-const AdminReports = () => {
+const AdminReports = ({ hideAudit = false, apiPrefix = '/admin' }) => {
     const { t } = useTranslation();
-    const REPORT_CARDS = useMemo(() => buildReportCards(t), [t]);
+    const allCards = useMemo(() => buildReportCards(t), [t]);
+    const REPORT_CARDS = useMemo(
+        () => hideAudit ? allCards.filter((c) => c.key !== 'AUDIT') : allCards,
+        [allCards, hideAudit],
+    );
     const addAlert = useAlertStore((s) => s.addAlert);
     const [startDate, setStartDate] = useState(sevenDaysAgo);
     const [endDate, setEndDate] = useState(today);
@@ -60,14 +64,14 @@ const AdminReports = () => {
         setLoading(true);
         setBreakdown(null);
         try {
-            const res = await api.get('/admin/reports/breakdown', { params: { start: s, end: e } });
+            const res = await api.get(`${apiPrefix}/reports/breakdown`, { params: { start: s, end: e } });
             setBreakdown(res.data);
         } catch (err) {
             addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || t('reports.failedLoad') });
         } finally {
             setLoading(false);
         }
-    }, [startDate, endDate, addAlert, t]);
+    }, [startDate, endDate, addAlert, t, apiPrefix]);
 
     const pickCard = (card) => {
         const end = today;
@@ -90,7 +94,7 @@ const AdminReports = () => {
     const exportAs = async (format) => {
         setExporting(format);
         try {
-            const res = await api.get('/admin/reports/export', {
+            const res = await api.get(`${apiPrefix}/reports/export`, {
                 params: { format, start: startDate, end: endDate },
                 responseType: 'blob',
             });

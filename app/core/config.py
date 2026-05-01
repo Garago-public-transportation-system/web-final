@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     MIN_TRIPS_BEFORE_BREAK: int = 1
     MIN_BREAK_DURATION: int = 10
     MAX_BREAK_DURATION: int = 30
+    DEFAULT_TICKET_FARE: float = 15.0
     TURNAROUND_BUFFER: int = 10
 
     # Shift Hours
@@ -39,7 +40,7 @@ class Settings(BaseSettings):
 
     # Lateness grace period: trip is considered late when it runs past
     # scheduled_end by more than this many minutes.
-    LATE_THRESHOLD_MINUTES: int = 5
+    LATE_THRESHOLD_MINUTES: int = 15
 
     # S1: Hardware API Key
     HARDWARE_API_KEY: str  # Must be set via .env (no default for security)

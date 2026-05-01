@@ -5,14 +5,14 @@
 #define WIFI_PASSWORD    "aHmEd061985"
 
 // ─── Backend (Render cloud) ───────────────────────────────────────────────────
-#define BACKEND_BASE     "http://10.171.236.40:8000/api/v1/hardware"
+#define BACKEND_BASE     "http://10.78.222.40:8000/api/v1/hardware"
 
 // ─── Hardware API Key — must match HARDWARE_API_KEY in backend .env ───────────
 #define HW_API_KEY       "20fb404802c3950a14ecd47f7dd3fd70bdd2cd850ad55f630d551b7d0b435b85"
 
 // ─── Camera IPs (local LAN) ───────────────────────────────────────────────────
-#define ENTRY_CAM_IP     "10.171.236.184"
-#define EXIT_CAM_IP      "192.168.1.13"
+#define ENTRY_CAM_IP     "10.78.222.55"
+#define EXIT_CAM_IP      "10.78.222.184"
 
 // ─── Gate logic ──────────────────────────────────────────────────────────────
 #define MAX_CARS              6

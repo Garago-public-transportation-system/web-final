@@ -21,7 +21,8 @@ const ManagerDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [activeTrips, setActiveTrips] = useState([]);
     const [tripsLoading, setTripsLoading] = useState(true);
-    const { lastNotification } = useWebSocket() || {};
+    const [fleet, setFleet] = useState([]);
+    const { lastNotification, gpsByVehicle } = useWebSocket() || {};
 
     const fetchStats = useCallback(async () => {
         try {
@@ -46,7 +47,16 @@ const ManagerDashboard = () => {
         }
     }, []);
 
-    useEffect(() => { fetchStats(); fetchActiveTrips(); }, [fetchStats, fetchActiveTrips]);
+    const fetchFleetLive = useCallback(async () => {
+        try {
+            const res = await api.get('/manager/fleet/live');
+            setFleet(res.data || []);
+        } catch {
+            setFleet([]);
+        }
+    }, []);
+
+    useEffect(() => { fetchStats(); fetchActiveTrips(); fetchFleetLive(); }, [fetchStats, fetchActiveTrips, fetchFleetLive]);
 
     useEffect(() => {
         if (!lastNotification) return;
@@ -67,13 +77,35 @@ const ManagerDashboard = () => {
         [activeTrips],
     );
 
+    const liveFleet = useMemo(() => {
+        const merged = (fleet || []).map((f) => {
+            const live = gpsByVehicle?.[f.vehicle_id];
+            if (!live) return f;
+            return {
+                ...f,
+                latitude: live.latitude,
+                longitude: live.longitude,
+                recorded_at: live.recorded_at,
+                driver_name: live.driver_name || f.driver_name,
+                trip_id: live.trip_id ?? f.trip_id,
+            };
+        });
+        return merged
+            .filter((v) => v.latitude != null && v.longitude != null)
+            .sort((a, b) => {
+                const ta = a.recorded_at ? Date.parse(a.recorded_at) : 0;
+                const tb = b.recorded_at ? Date.parse(b.recorded_at) : 0;
+                return tb - ta;
+            });
+    }, [fleet, gpsByVehicle]);
+
     return (
         <>
             <PageHeader
                 title="Live operations"
                 sub={`${todayLabel} · real-time fleet status`}
                 actions={(
-                    <button className="btn" onClick={() => { fetchStats(); fetchActiveTrips(); }}>
+                    <button className="btn" onClick={() => { fetchStats(); fetchActiveTrips(); fetchFleetLive(); }}>
                         <Icon name="reroute" />Refresh
                     </button>
                 )}
@@ -132,7 +164,40 @@ const ManagerDashboard = () => {
                         </Panel>
                     </div>
 
-                    <Panel title="Ops signal">
+                    <Panel title="Live driver positions" action={<span className="mono text-xs muted">{liveFleet.length} live</span>} flush>
+                        {liveFleet.length === 0 ? (
+                            <div style={{ padding: 28 }}><Empty>Waiting for driver GPS pings.</Empty></div>
+                        ) : (
+                            <div style={{ maxHeight: 320, overflow: 'auto' }}>
+                                {liveFleet.map((v) => {
+                                    const ts = v.recorded_at ? new Date(v.recorded_at) : null;
+                                    const ageSec = ts ? Math.max(0, Math.round((Date.now() - ts.getTime()) / 1000)) : null;
+                                    const stale = ageSec != null && ageSec > 60;
+                                    return (
+                                        <div key={v.vehicle_id} style={{ padding: '10px 14px', borderBottom: '1px solid var(--line)' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                                                <span className="mono text-sm">{v.plate_number}</span>
+                                                <span className="mono text-xs muted">
+                                                    {ageSec != null ? `${ageSec}s ago` : '—'}
+                                                </span>
+                                            </div>
+                                            <div className="text-xs muted" style={{ marginTop: 2 }}>
+                                                {v.driver_name || 'No driver'} · Trip {v.trip_id ? `#${v.trip_id}` : '—'}
+                                            </div>
+                                            <div className="mono text-xs" style={{ marginTop: 4, color: stale ? 'var(--warn)' : 'var(--ok)' }}>
+                                                {Number(v.latitude).toFixed(5)}, {Number(v.longitude).toFixed(5)}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </Panel>
+                </div>
+
+                <div style={{ height: 16 }} />
+
+                <Panel title="Ops signal">
                         <div style={{ display: 'grid', gap: 12 }}>
                             <SignalRow
                                 label="Critical crowding"
@@ -160,7 +225,6 @@ const ManagerDashboard = () => {
                             </div>
                         </div>
                     </Panel>
-                </div>
             </div>
         </>
     );

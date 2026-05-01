@@ -39,6 +39,8 @@ const ICONS = {
   shield: (<path d="M8 1l6 2v5c0 3.5-2.5 6-6 7-3.5-1-6-3.5-6-7V3z"/>),
   flash: (<path d="M9 1L3 9h4l-1 6 6-8H8z"/>),
   reroute: (<><path d="M2 5h8a3 3 0 0 1 0 6H6"/><path d="M4 3L2 5l2 2M8 9l-2 2 2 2"/></>),
+  trash: (<><path d="M3 5h10M6 5V3h4v2M5 5l.8 8h4.4L11 5"/></>),
+  'user-edit': (<><path d="M9 12H2v-1a4 4 0 0 1 5.33-3.78"/><circle cx="6" cy="5" r="3"/><path d="M11 9l2 2-3.5 3.5H8v-1.5z"/></>),
 };
 
 export default function Icon({ name, size = 14, className = '' }) {

@@ -53,6 +53,12 @@ const NAV = {
         { to: '/manager/notifications', label: 'Notifications', icon: 'bell' },
       ],
     },
+    {
+      section: 'Analytics',
+      items: [
+        { to: '/manager/reports', label: 'Reports', icon: 'report' },
+      ],
+    },
   ],
 };
 

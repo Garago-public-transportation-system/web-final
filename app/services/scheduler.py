@@ -31,7 +31,7 @@ async def rotation_manager_job():
             logger.error(f"Rotation manager failed: {e}")
 
 async def lateness_job():
-    """GAP-06: every minute, flip `is_late` on ACTIVE trips past their grace
+    """Every minute, flip `is_late` on ACTIVE trips past their grace
     window so DailyReport.on_time_percentage reflects reality."""
     async with AsyncSessionLocal() as db:
         try:
@@ -94,7 +94,7 @@ def start_scheduler():
         max_instances=1,
     )
     
-    # GAP-06: Persist trip.is_late for active trips past their grace window.
+    # Persist trip.is_late for active trips past their grace window.
     scheduler.add_job(
         lateness_job,
         'interval',

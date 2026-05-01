@@ -48,6 +48,7 @@ const Sidebar = ({ open = true }) => {
             { text: t('sidebar.maintenance'), icon: <Build />, path: '/manager/maintenance' },
             { text: t('sidebar.fleet'), icon: <DirectionsBus />, path: '/manager/fleet' },
             { text: t('sidebar.notifications'), icon: <Notifications />, path: '/manager/notifications' },
+            { text: t('sidebar.reports'), icon: <Assessment />, path: '/manager/reports' },
         ],
         DRIVER: [
             { text: t('sidebar.dashboard'), icon: <DashboardIcon />, path: '/driver/dashboard' },

@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict My3ltfI3RCBAdIU3fXYa3SaZ9cO3PARy2S9cgskOOac8sVbsBtsezNjQtEwDOD3
 
 -- Dumped from database version 18.0
 -- Dumped by pg_dump version 18.1 (Postgres.app)
@@ -20,16 +19,14 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: public; Type: SCHEMA; Schema: -; Owner: postgres
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
 -- *not* creating schema, since initdb creates it
 
 
-ALTER SCHEMA public OWNER TO postgres;
-
 --
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: postgres
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
 --
 
 COMMENT ON SCHEMA public IS '';
@@ -43,14 +40,14 @@ CREATE EXTENSION IF NOT EXISTS pg_stat_statements WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION pg_stat_statements; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION pg_stat_statements; Type: COMMENT; Schema: -; Owner: -
 --
 
 COMMENT ON EXTENSION pg_stat_statements IS 'track planning and execution statistics of all SQL statements executed';
 
 
 --
--- Name: driver_status; Type: TYPE; Schema: public; Owner: postgres
+-- Name: driver_status; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.driver_status AS ENUM (
@@ -61,10 +58,8 @@ CREATE TYPE public.driver_status AS ENUM (
 );
 
 
-ALTER TYPE public.driver_status OWNER TO postgres;
-
 --
--- Name: maintenance_status; Type: TYPE; Schema: public; Owner: postgres
+-- Name: maintenance_status; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.maintenance_status AS ENUM (
@@ -76,10 +71,8 @@ CREATE TYPE public.maintenance_status AS ENUM (
 );
 
 
-ALTER TYPE public.maintenance_status OWNER TO postgres;
-
 --
--- Name: maintenance_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: maintenance_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.maintenance_type AS ENUM (
@@ -88,10 +81,8 @@ CREATE TYPE public.maintenance_type AS ENUM (
 );
 
 
-ALTER TYPE public.maintenance_type OWNER TO postgres;
-
 --
--- Name: notification_status; Type: TYPE; Schema: public; Owner: postgres
+-- Name: notification_status; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.notification_status AS ENUM (
@@ -101,10 +92,8 @@ CREATE TYPE public.notification_status AS ENUM (
 );
 
 
-ALTER TYPE public.notification_status OWNER TO postgres;
-
 --
--- Name: replacement_reason; Type: TYPE; Schema: public; Owner: postgres
+-- Name: replacement_reason; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.replacement_reason AS ENUM (
@@ -115,10 +104,8 @@ CREATE TYPE public.replacement_reason AS ENUM (
 );
 
 
-ALTER TYPE public.replacement_reason OWNER TO postgres;
-
 --
--- Name: reroute_status; Type: TYPE; Schema: public; Owner: postgres
+-- Name: reroute_status; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.reroute_status AS ENUM (
@@ -128,10 +115,8 @@ CREATE TYPE public.reroute_status AS ENUM (
 );
 
 
-ALTER TYPE public.reroute_status OWNER TO postgres;
-
 --
--- Name: rotation_position; Type: TYPE; Schema: public; Owner: postgres
+-- Name: rotation_position; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.rotation_position AS ENUM (
@@ -141,10 +126,8 @@ CREATE TYPE public.rotation_position AS ENUM (
 );
 
 
-ALTER TYPE public.rotation_position OWNER TO postgres;
-
 --
--- Name: shift_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: shift_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.shift_type AS ENUM (
@@ -153,10 +136,8 @@ CREATE TYPE public.shift_type AS ENUM (
 );
 
 
-ALTER TYPE public.shift_type OWNER TO postgres;
-
 --
--- Name: trip_direction; Type: TYPE; Schema: public; Owner: postgres
+-- Name: trip_direction; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.trip_direction AS ENUM (
@@ -165,10 +146,8 @@ CREATE TYPE public.trip_direction AS ENUM (
 );
 
 
-ALTER TYPE public.trip_direction OWNER TO postgres;
-
 --
--- Name: trip_status; Type: TYPE; Schema: public; Owner: postgres
+-- Name: trip_status; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.trip_status AS ENUM (
@@ -179,10 +158,8 @@ CREATE TYPE public.trip_status AS ENUM (
 );
 
 
-ALTER TYPE public.trip_status OWNER TO postgres;
-
 --
--- Name: tripticksetstatus; Type: TYPE; Schema: public; Owner: postgres
+-- Name: tripticksetstatus; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.tripticksetstatus AS ENUM (
@@ -193,10 +170,8 @@ CREATE TYPE public.tripticksetstatus AS ENUM (
 );
 
 
-ALTER TYPE public.tripticksetstatus OWNER TO postgres;
-
 --
--- Name: user_role; Type: TYPE; Schema: public; Owner: postgres
+-- Name: user_role; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.user_role AS ENUM (
@@ -206,10 +181,8 @@ CREATE TYPE public.user_role AS ENUM (
 );
 
 
-ALTER TYPE public.user_role OWNER TO postgres;
-
 --
--- Name: vehicle_status; Type: TYPE; Schema: public; Owner: postgres
+-- Name: vehicle_status; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.vehicle_status AS ENUM (
@@ -221,14 +194,12 @@ CREATE TYPE public.vehicle_status AS ENUM (
 );
 
 
-ALTER TYPE public.vehicle_status OWNER TO postgres;
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: alembic_version; Type: TABLE; Schema: public; Owner: postgres
+-- Name: alembic_version; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.alembic_version (
@@ -236,10 +207,8 @@ CREATE TABLE public.alembic_version (
 );
 
 
-ALTER TABLE public.alembic_version OWNER TO postgres;
-
 --
--- Name: audit_logs; Type: TABLE; Schema: public; Owner: postgres
+-- Name: audit_logs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.audit_logs (
@@ -256,10 +225,8 @@ CREATE TABLE public.audit_logs (
 );
 
 
-ALTER TABLE public.audit_logs OWNER TO postgres;
-
 --
--- Name: audit_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: audit_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.audit_logs_id_seq
@@ -271,17 +238,15 @@ CREATE SEQUENCE public.audit_logs_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.audit_logs_id_seq OWNER TO postgres;
-
 --
--- Name: audit_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: audit_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.audit_logs_id_seq OWNED BY public.audit_logs.id;
 
 
 --
--- Name: break_logs; Type: TABLE; Schema: public; Owner: postgres
+-- Name: break_logs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.break_logs (
@@ -298,10 +263,8 @@ CREATE TABLE public.break_logs (
 );
 
 
-ALTER TABLE public.break_logs OWNER TO postgres;
-
 --
--- Name: break_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: break_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.break_logs_id_seq
@@ -313,17 +276,15 @@ CREATE SEQUENCE public.break_logs_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.break_logs_id_seq OWNER TO postgres;
-
 --
--- Name: break_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: break_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.break_logs_id_seq OWNED BY public.break_logs.id;
 
 
 --
--- Name: camera_readings; Type: TABLE; Schema: public; Owner: postgres
+-- Name: camera_readings; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.camera_readings (
@@ -336,10 +297,8 @@ CREATE TABLE public.camera_readings (
 );
 
 
-ALTER TABLE public.camera_readings OWNER TO postgres;
-
 --
--- Name: camera_readings_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: camera_readings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.camera_readings_id_seq
@@ -351,17 +310,15 @@ CREATE SEQUENCE public.camera_readings_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.camera_readings_id_seq OWNER TO postgres;
-
 --
--- Name: camera_readings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: camera_readings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.camera_readings_id_seq OWNED BY public.camera_readings.id;
 
 
 --
--- Name: crowding_events; Type: TABLE; Schema: public; Owner: postgres
+-- Name: crowding_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.crowding_events (
@@ -375,10 +332,8 @@ CREATE TABLE public.crowding_events (
 );
 
 
-ALTER TABLE public.crowding_events OWNER TO postgres;
-
 --
--- Name: crowding_events_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: crowding_events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.crowding_events_id_seq
@@ -390,17 +345,15 @@ CREATE SEQUENCE public.crowding_events_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.crowding_events_id_seq OWNER TO postgres;
-
 --
--- Name: crowding_events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: crowding_events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.crowding_events_id_seq OWNED BY public.crowding_events.id;
 
 
 --
--- Name: daily_reports; Type: TABLE; Schema: public; Owner: postgres
+-- Name: daily_reports; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.daily_reports (
@@ -422,10 +375,8 @@ CREATE TABLE public.daily_reports (
 );
 
 
-ALTER TABLE public.daily_reports OWNER TO postgres;
-
 --
--- Name: daily_reports_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: daily_reports_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.daily_reports_id_seq
@@ -437,17 +388,15 @@ CREATE SEQUENCE public.daily_reports_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.daily_reports_id_seq OWNER TO postgres;
-
 --
--- Name: daily_reports_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: daily_reports_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.daily_reports_id_seq OWNED BY public.daily_reports.id;
 
 
 --
--- Name: driver_exchanges; Type: TABLE; Schema: public; Owner: postgres
+-- Name: driver_exchanges; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.driver_exchanges (
@@ -465,10 +414,8 @@ CREATE TABLE public.driver_exchanges (
 );
 
 
-ALTER TABLE public.driver_exchanges OWNER TO postgres;
-
 --
--- Name: driver_exchanges_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: driver_exchanges_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.driver_exchanges_id_seq
@@ -480,17 +427,15 @@ CREATE SEQUENCE public.driver_exchanges_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.driver_exchanges_id_seq OWNER TO postgres;
-
 --
--- Name: driver_exchanges_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: driver_exchanges_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.driver_exchanges_id_seq OWNED BY public.driver_exchanges.id;
 
 
 --
--- Name: drivers; Type: TABLE; Schema: public; Owner: postgres
+-- Name: drivers; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.drivers (
@@ -521,10 +466,8 @@ CREATE TABLE public.drivers (
 );
 
 
-ALTER TABLE public.drivers OWNER TO postgres;
-
 --
--- Name: drivers_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: drivers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.drivers_id_seq
@@ -536,17 +479,15 @@ CREATE SEQUENCE public.drivers_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.drivers_id_seq OWNER TO postgres;
-
 --
--- Name: drivers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: drivers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.drivers_id_seq OWNED BY public.drivers.id;
 
 
 --
--- Name: garages; Type: TABLE; Schema: public; Owner: postgres
+-- Name: garages; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.garages (
@@ -562,10 +503,8 @@ CREATE TABLE public.garages (
 );
 
 
-ALTER TABLE public.garages OWNER TO postgres;
-
 --
--- Name: garages_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: garages_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.garages_id_seq
@@ -577,17 +516,15 @@ CREATE SEQUENCE public.garages_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.garages_id_seq OWNER TO postgres;
-
 --
--- Name: garages_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: garages_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.garages_id_seq OWNED BY public.garages.id;
 
 
 --
--- Name: gate_cameras; Type: TABLE; Schema: public; Owner: postgres
+-- Name: gate_cameras; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.gate_cameras (
@@ -601,10 +538,8 @@ CREATE TABLE public.gate_cameras (
 );
 
 
-ALTER TABLE public.gate_cameras OWNER TO postgres;
-
 --
--- Name: gate_cameras_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: gate_cameras_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.gate_cameras_id_seq
@@ -616,17 +551,15 @@ CREATE SEQUENCE public.gate_cameras_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.gate_cameras_id_seq OWNER TO postgres;
-
 --
--- Name: gate_cameras_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: gate_cameras_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.gate_cameras_id_seq OWNED BY public.gate_cameras.id;
 
 
 --
--- Name: gate_logs; Type: TABLE; Schema: public; Owner: postgres
+-- Name: gate_logs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.gate_logs (
@@ -642,10 +575,8 @@ CREATE TABLE public.gate_logs (
 );
 
 
-ALTER TABLE public.gate_logs OWNER TO postgres;
-
 --
--- Name: gate_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: gate_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.gate_logs_id_seq
@@ -657,17 +588,15 @@ CREATE SEQUENCE public.gate_logs_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.gate_logs_id_seq OWNER TO postgres;
-
 --
--- Name: gate_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: gate_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.gate_logs_id_seq OWNED BY public.gate_logs.id;
 
 
 --
--- Name: gps_tracking; Type: TABLE; Schema: public; Owner: postgres
+-- Name: gps_tracking; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.gps_tracking (
@@ -683,10 +612,8 @@ CREATE TABLE public.gps_tracking (
 );
 
 
-ALTER TABLE public.gps_tracking OWNER TO postgres;
-
 --
--- Name: gps_tracking_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: gps_tracking_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.gps_tracking_id_seq
@@ -698,17 +625,15 @@ CREATE SEQUENCE public.gps_tracking_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.gps_tracking_id_seq OWNER TO postgres;
-
 --
--- Name: gps_tracking_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: gps_tracking_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.gps_tracking_id_seq OWNED BY public.gps_tracking.id;
 
 
 --
--- Name: maintenance_requests; Type: TABLE; Schema: public; Owner: postgres
+-- Name: maintenance_requests; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.maintenance_requests (
@@ -731,10 +656,8 @@ CREATE TABLE public.maintenance_requests (
 );
 
 
-ALTER TABLE public.maintenance_requests OWNER TO postgres;
-
 --
--- Name: maintenance_requests_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: maintenance_requests_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.maintenance_requests_id_seq
@@ -746,17 +669,15 @@ CREATE SEQUENCE public.maintenance_requests_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.maintenance_requests_id_seq OWNER TO postgres;
-
 --
--- Name: maintenance_requests_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: maintenance_requests_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.maintenance_requests_id_seq OWNED BY public.maintenance_requests.id;
 
 
 --
--- Name: notifications; Type: TABLE; Schema: public; Owner: postgres
+-- Name: notifications; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.notifications (
@@ -771,10 +692,8 @@ CREATE TABLE public.notifications (
 );
 
 
-ALTER TABLE public.notifications OWNER TO postgres;
-
 --
--- Name: notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.notifications_id_seq
@@ -786,17 +705,15 @@ CREATE SEQUENCE public.notifications_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.notifications_id_seq OWNER TO postgres;
-
 --
--- Name: notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
 
 
 --
--- Name: reroute_logs; Type: TABLE; Schema: public; Owner: postgres
+-- Name: reroute_logs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.reroute_logs (
@@ -814,10 +731,8 @@ CREATE TABLE public.reroute_logs (
 );
 
 
-ALTER TABLE public.reroute_logs OWNER TO postgres;
-
 --
--- Name: reroute_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: reroute_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.reroute_logs_id_seq
@@ -829,17 +744,15 @@ CREATE SEQUENCE public.reroute_logs_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.reroute_logs_id_seq OWNER TO postgres;
-
 --
--- Name: reroute_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: reroute_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.reroute_logs_id_seq OWNED BY public.reroute_logs.id;
 
 
 --
--- Name: rotation_assignments; Type: TABLE; Schema: public; Owner: postgres
+-- Name: rotation_assignments; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.rotation_assignments (
@@ -858,10 +771,8 @@ CREATE TABLE public.rotation_assignments (
 );
 
 
-ALTER TABLE public.rotation_assignments OWNER TO postgres;
-
 --
--- Name: rotation_assignments_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: rotation_assignments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.rotation_assignments_id_seq
@@ -873,17 +784,15 @@ CREATE SEQUENCE public.rotation_assignments_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.rotation_assignments_id_seq OWNER TO postgres;
-
 --
--- Name: rotation_assignments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: rotation_assignments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.rotation_assignments_id_seq OWNED BY public.rotation_assignments.id;
 
 
 --
--- Name: route_stops; Type: TABLE; Schema: public; Owner: postgres
+-- Name: route_stops; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.route_stops (
@@ -898,10 +807,8 @@ CREATE TABLE public.route_stops (
 );
 
 
-ALTER TABLE public.route_stops OWNER TO postgres;
-
 --
--- Name: route_stops_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: route_stops_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.route_stops_id_seq
@@ -913,17 +820,15 @@ CREATE SEQUENCE public.route_stops_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.route_stops_id_seq OWNER TO postgres;
-
 --
--- Name: route_stops_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: route_stops_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.route_stops_id_seq OWNED BY public.route_stops.id;
 
 
 --
--- Name: routes; Type: TABLE; Schema: public; Owner: postgres
+-- Name: routes; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.routes (
@@ -941,10 +846,8 @@ CREATE TABLE public.routes (
 );
 
 
-ALTER TABLE public.routes OWNER TO postgres;
-
 --
--- Name: routes_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: routes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.routes_id_seq
@@ -956,17 +859,15 @@ CREATE SEQUENCE public.routes_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.routes_id_seq OWNER TO postgres;
-
 --
--- Name: routes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: routes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.routes_id_seq OWNED BY public.routes.id;
 
 
 --
--- Name: tickets; Type: TABLE; Schema: public; Owner: postgres
+-- Name: tickets; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.tickets (
@@ -984,10 +885,8 @@ CREATE TABLE public.tickets (
 );
 
 
-ALTER TABLE public.tickets OWNER TO postgres;
-
 --
--- Name: tickets_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: tickets_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.tickets_id_seq
@@ -999,17 +898,15 @@ CREATE SEQUENCE public.tickets_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.tickets_id_seq OWNER TO postgres;
-
 --
--- Name: tickets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: tickets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.tickets_id_seq OWNED BY public.tickets.id;
 
 
 --
--- Name: trips; Type: TABLE; Schema: public; Owner: postgres
+-- Name: trips; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.trips (
@@ -1035,14 +932,13 @@ CREATE TABLE public.trips (
     notes text,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL,
+    is_active boolean NOT NULL,
     CONSTRAINT ck_trips_end_after_start CHECK (((scheduled_end IS NULL) OR (scheduled_end >= scheduled_start)))
 );
 
 
-ALTER TABLE public.trips OWNER TO postgres;
-
 --
--- Name: trips_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: trips_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.trips_id_seq
@@ -1054,17 +950,15 @@ CREATE SEQUENCE public.trips_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.trips_id_seq OWNER TO postgres;
-
 --
--- Name: trips_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: trips_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.trips_id_seq OWNED BY public.trips.id;
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: postgres
+-- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.users (
@@ -1085,10 +979,8 @@ CREATE TABLE public.users (
 );
 
 
-ALTER TABLE public.users OWNER TO postgres;
-
 --
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.users_id_seq
@@ -1100,17 +992,15 @@ CREATE SEQUENCE public.users_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
-
 --
--- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
--- Name: vehicles; Type: TABLE; Schema: public; Owner: postgres
+-- Name: vehicles; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.vehicles (
@@ -1131,10 +1021,8 @@ CREATE TABLE public.vehicles (
 );
 
 
-ALTER TABLE public.vehicles OWNER TO postgres;
-
 --
--- Name: vehicles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: vehicles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.vehicles_id_seq
@@ -1146,173 +1034,171 @@ CREATE SEQUENCE public.vehicles_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.vehicles_id_seq OWNER TO postgres;
-
 --
--- Name: vehicles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: vehicles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.vehicles_id_seq OWNED BY public.vehicles.id;
 
 
 --
--- Name: audit_logs id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: audit_logs id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.audit_logs ALTER COLUMN id SET DEFAULT nextval('public.audit_logs_id_seq'::regclass);
 
 
 --
--- Name: break_logs id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: break_logs id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.break_logs ALTER COLUMN id SET DEFAULT nextval('public.break_logs_id_seq'::regclass);
 
 
 --
--- Name: camera_readings id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: camera_readings id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.camera_readings ALTER COLUMN id SET DEFAULT nextval('public.camera_readings_id_seq'::regclass);
 
 
 --
--- Name: crowding_events id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: crowding_events id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.crowding_events ALTER COLUMN id SET DEFAULT nextval('public.crowding_events_id_seq'::regclass);
 
 
 --
--- Name: daily_reports id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: daily_reports id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.daily_reports ALTER COLUMN id SET DEFAULT nextval('public.daily_reports_id_seq'::regclass);
 
 
 --
--- Name: driver_exchanges id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: driver_exchanges id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.driver_exchanges ALTER COLUMN id SET DEFAULT nextval('public.driver_exchanges_id_seq'::regclass);
 
 
 --
--- Name: drivers id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: drivers id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.drivers ALTER COLUMN id SET DEFAULT nextval('public.drivers_id_seq'::regclass);
 
 
 --
--- Name: garages id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: garages id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.garages ALTER COLUMN id SET DEFAULT nextval('public.garages_id_seq'::regclass);
 
 
 --
--- Name: gate_cameras id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: gate_cameras id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.gate_cameras ALTER COLUMN id SET DEFAULT nextval('public.gate_cameras_id_seq'::regclass);
 
 
 --
--- Name: gate_logs id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: gate_logs id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.gate_logs ALTER COLUMN id SET DEFAULT nextval('public.gate_logs_id_seq'::regclass);
 
 
 --
--- Name: gps_tracking id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: gps_tracking id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.gps_tracking ALTER COLUMN id SET DEFAULT nextval('public.gps_tracking_id_seq'::regclass);
 
 
 --
--- Name: maintenance_requests id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: maintenance_requests id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.maintenance_requests ALTER COLUMN id SET DEFAULT nextval('public.maintenance_requests_id_seq'::regclass);
 
 
 --
--- Name: notifications id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: notifications id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('public.notifications_id_seq'::regclass);
 
 
 --
--- Name: reroute_logs id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: reroute_logs id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.reroute_logs ALTER COLUMN id SET DEFAULT nextval('public.reroute_logs_id_seq'::regclass);
 
 
 --
--- Name: rotation_assignments id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: rotation_assignments id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rotation_assignments ALTER COLUMN id SET DEFAULT nextval('public.rotation_assignments_id_seq'::regclass);
 
 
 --
--- Name: route_stops id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: route_stops id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.route_stops ALTER COLUMN id SET DEFAULT nextval('public.route_stops_id_seq'::regclass);
 
 
 --
--- Name: routes id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: routes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.routes ALTER COLUMN id SET DEFAULT nextval('public.routes_id_seq'::regclass);
 
 
 --
--- Name: tickets id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: tickets id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tickets ALTER COLUMN id SET DEFAULT nextval('public.tickets_id_seq'::regclass);
 
 
 --
--- Name: trips id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: trips id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.trips ALTER COLUMN id SET DEFAULT nextval('public.trips_id_seq'::regclass);
 
 
 --
--- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
 --
--- Name: vehicles id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: vehicles id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.vehicles ALTER COLUMN id SET DEFAULT nextval('public.vehicles_id_seq'::regclass);
 
 
 --
--- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
-1e7de45c5093
+0007_add_trip_is_active
 \.
 
 
 --
--- Data for Name: audit_logs; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: audit_logs; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.audit_logs (id, user_id, action, entity_type, entity_id, old_values, new_values, ip_address, created_at, updated_at) FROM stdin;
@@ -1354,11 +1240,12 @@ COPY public.audit_logs (id, user_id, action, entity_type, entity_id, old_values,
 36	1	LOGIN	User	1	null	null	127.0.0.1	2026-04-29 00:32:34.991414+03	2026-04-29 00:32:34.991414+03
 37	1	LOGIN	User	1	null	null	127.0.0.1	2026-04-29 00:33:43.815577+03	2026-04-29 00:33:43.815577+03
 38	1	LOGIN	User	1	null	null	127.0.0.1	2026-04-29 00:48:01.823203+03	2026-04-29 00:48:01.823203+03
+39	1	LOGIN	User	1	null	null	127.0.0.1	2026-04-30 16:01:08.611466+03	2026-04-30 16:01:08.611466+03
 \.
 
 
 --
--- Data for Name: break_logs; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: break_logs; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.break_logs (id, driver_id, shift_date, break_number, start_time, end_time, duration_minutes, replaced_by_driver_id, created_at, updated_at) FROM stdin;
@@ -1366,7 +1253,7 @@ COPY public.break_logs (id, driver_id, shift_date, break_number, start_time, end
 
 
 --
--- Data for Name: camera_readings; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: camera_readings; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.camera_readings (id, trip_id, vehicle_id, passenger_count, crowding_score, created_at) FROM stdin;
@@ -1374,7 +1261,7 @@ COPY public.camera_readings (id, trip_id, vehicle_id, passenger_count, crowding_
 
 
 --
--- Data for Name: crowding_events; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: crowding_events; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.crowding_events (id, trip_id, vehicle_id, crowding_score, passenger_count, auto_dispatch_triggered, recorded_at) FROM stdin;
@@ -1382,7 +1269,7 @@ COPY public.crowding_events (id, trip_id, vehicle_id, crowding_score, passenger_
 
 
 --
--- Data for Name: daily_reports; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: daily_reports; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.daily_reports (id, report_date, total_trips, completed_trips, cancelled_trips, total_revenue, total_passengers, avg_crowding_score, on_time_percentage, total_maintenance_requests, active_vehicles, active_drivers, extra_dispatches, created_at, updated_at) FROM stdin;
@@ -1390,7 +1277,7 @@ COPY public.daily_reports (id, report_date, total_trips, completed_trips, cancel
 
 
 --
--- Data for Name: driver_exchanges; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: driver_exchanges; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.driver_exchanges (id, rotation_assignment_id, outgoing_driver_id, incoming_driver_id, reason, exchange_time, return_time, trip_id, notes, created_at, updated_at) FROM stdin;
@@ -1422,7 +1309,7 @@ COPY public.driver_exchanges (id, rotation_assignment_id, outgoing_driver_id, in
 
 
 --
--- Data for Name: drivers; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: drivers; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.drivers (id, user_id, license_number, license_expiry, garage_id, status, current_vehicle_id, current_route_id, total_trips_today, total_trips_all_time, rating, break_time_remaining, total_break_time_today, break_start_time, trips_since_last_break, current_break_number, min_break_duration, max_break_duration, current_shift, shift_start_time, shift_end_time, fatigue_score, created_at, updated_at) FROM stdin;
@@ -1460,7 +1347,7 @@ COPY public.drivers (id, user_id, license_number, license_expiry, garage_id, sta
 
 
 --
--- Data for Name: garages; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: garages; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.garages (id, name, address, latitude, longitude, total_capacity, current_occupancy, created_at, updated_at) FROM stdin;
@@ -1469,7 +1356,7 @@ COPY public.garages (id, name, address, latitude, longitude, total_capacity, cur
 
 
 --
--- Data for Name: gate_cameras; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: gate_cameras; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.gate_cameras (id, location_name, ip_address, gate_type, is_active, created_at, updated_at) FROM stdin;
@@ -1477,7 +1364,7 @@ COPY public.gate_cameras (id, location_name, ip_address, gate_type, is_active, c
 
 
 --
--- Data for Name: gate_logs; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: gate_logs; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.gate_logs (id, gate_id, plate_number, confidence, event, vehicle_id, created_at, ocr_raw_text, match_method) FROM stdin;
@@ -1540,7 +1427,7 @@ COPY public.gate_logs (id, gate_id, plate_number, confidence, event, vehicle_id,
 
 
 --
--- Data for Name: gps_tracking; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: gps_tracking; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.gps_tracking (id, vehicle_id, trip_id, latitude, longitude, speed, heading, recorded_at, created_at) FROM stdin;
@@ -1548,7 +1435,7 @@ COPY public.gps_tracking (id, vehicle_id, trip_id, latitude, longitude, speed, h
 
 
 --
--- Data for Name: maintenance_requests; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: maintenance_requests; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.maintenance_requests (id, vehicle_id, requested_by_id, approved_by_id, type, status, priority, title, description, estimated_cost, actual_cost, scheduled_date, completed_date, rejection_reason, created_at, updated_at) FROM stdin;
@@ -1559,7 +1446,7 @@ COPY public.maintenance_requests (id, vehicle_id, requested_by_id, approved_by_i
 
 
 --
--- Data for Name: notifications; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: notifications; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.notifications (id, user_id, title, message, notification_type, status, created_at, updated_at) FROM stdin;
@@ -1576,7 +1463,7 @@ COPY public.notifications (id, user_id, title, message, notification_type, statu
 
 
 --
--- Data for Name: reroute_logs; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: reroute_logs; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.reroute_logs (id, driver_id, trip_id, original_route_id, new_route_id, approved_by, status, reason, requested_at, created_at, updated_at) FROM stdin;
@@ -1588,7 +1475,7 @@ COPY public.reroute_logs (id, driver_id, trip_id, original_route_id, new_route_i
 
 
 --
--- Data for Name: rotation_assignments; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: rotation_assignments; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.rotation_assignments (id, route_id, driver_id, vehicle_id, shift_type, "position", shift_date, shift_start_time, shift_end_time, is_active, created_at, updated_at) FROM stdin;
@@ -1626,7 +1513,7 @@ COPY public.rotation_assignments (id, route_id, driver_id, vehicle_id, shift_typ
 
 
 --
--- Data for Name: route_stops; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: route_stops; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.route_stops (id, route_id, stop_name, sequence_order, latitude, longitude, dwell_time_minutes, created_at) FROM stdin;
@@ -1650,7 +1537,7 @@ COPY public.route_stops (id, route_id, stop_name, sequence_order, latitude, long
 
 
 --
--- Data for Name: routes; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: routes; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.routes (id, name, start_location, end_location, distance_km, estimated_time_minutes, fare, turnaround_time_minutes, is_active, created_at, updated_at) FROM stdin;
@@ -1662,7 +1549,7 @@ COPY public.routes (id, name, start_location, end_location, distance_km, estimat
 
 
 --
--- Data for Name: tickets; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: tickets; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.tickets (id, ticket_code, trip_id, passenger_name, seat_number, price, status, purchase_time, validation_time, created_at, updated_at) FROM stdin;
@@ -1670,75 +1557,75 @@ COPY public.tickets (id, ticket_code, trip_id, passenger_name, seat_number, pric
 
 
 --
--- Data for Name: trips; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: trips; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.trips (id, driver_id, vehicle_id, route_id, rotation_assignment_id, direction, status, trip_number, scheduled_start, scheduled_end, actual_start, actual_end, passenger_count, crowding_score, is_crowded, driver_crowding_report, fare_collected, is_extra_dispatch, is_late, notes, created_at, updated_at) FROM stdin;
-49	1	1	1	25	OUTBOUND	SCHEDULED	TRP-1-0-O	2026-04-18 08:00:00+02	2026-04-18 08:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-50	1	1	1	25	INBOUND	SCHEDULED	TRP-1-0-I	2026-04-18 09:00:00+02	2026-04-18 09:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-51	2	1	1	26	OUTBOUND	SCHEDULED	TRP-1-1-O	2026-04-18 10:00:00+02	2026-04-18 10:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-52	2	1	1	26	INBOUND	SCHEDULED	TRP-1-1-I	2026-04-18 11:00:00+02	2026-04-18 11:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-53	3	2	1	27	OUTBOUND	SCHEDULED	TRP-1-2-O	2026-04-18 09:00:00+02	2026-04-18 09:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-54	3	2	1	27	INBOUND	SCHEDULED	TRP-1-2-I	2026-04-18 10:00:00+02	2026-04-18 10:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-55	4	3	1	28	OUTBOUND	SCHEDULED	TRP-1-0-O	2026-04-18 17:00:00+02	2026-04-18 17:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-56	4	3	1	28	INBOUND	SCHEDULED	TRP-1-0-I	2026-04-18 18:00:00+02	2026-04-18 18:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-57	5	3	1	29	OUTBOUND	SCHEDULED	TRP-1-1-O	2026-04-18 19:00:00+02	2026-04-18 19:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-58	5	3	1	29	INBOUND	SCHEDULED	TRP-1-1-I	2026-04-18 20:00:00+02	2026-04-18 20:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-61	7	5	2	31	OUTBOUND	SCHEDULED	TRP-2-0-O	2026-04-18 08:00:00+02	2026-04-18 09:00:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-62	7	5	2	31	INBOUND	SCHEDULED	TRP-2-0-I	2026-04-18 09:15:00+02	2026-04-18 10:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-63	8	5	2	32	OUTBOUND	SCHEDULED	TRP-2-1-O	2026-04-18 10:00:00+02	2026-04-18 11:00:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-64	8	5	2	32	INBOUND	SCHEDULED	TRP-2-1-I	2026-04-18 11:15:00+02	2026-04-18 12:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-65	9	6	2	33	OUTBOUND	SCHEDULED	TRP-2-2-O	2026-04-18 09:00:00+02	2026-04-18 10:00:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-66	9	6	2	33	INBOUND	SCHEDULED	TRP-2-2-I	2026-04-18 10:15:00+02	2026-04-18 11:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-67	10	7	2	34	OUTBOUND	SCHEDULED	TRP-2-0-O	2026-04-18 17:00:00+02	2026-04-18 18:00:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-68	10	7	2	34	INBOUND	SCHEDULED	TRP-2-0-I	2026-04-18 18:15:00+02	2026-04-18 19:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-70	11	7	2	35	INBOUND	SCHEDULED	TRP-2-1-I	2026-04-18 20:15:00+02	2026-04-18 21:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-71	12	8	2	36	OUTBOUND	SCHEDULED	TRP-2-2-O	2026-04-18 18:00:00+02	2026-04-18 19:00:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-72	12	8	2	36	INBOUND	SCHEDULED	TRP-2-2-I	2026-04-18 19:15:00+02	2026-04-18 20:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-73	13	9	3	37	OUTBOUND	SCHEDULED	TRP-3-0-O	2026-04-18 08:00:00+02	2026-04-18 09:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-74	13	9	3	37	INBOUND	SCHEDULED	TRP-3-0-I	2026-04-18 09:30:00+02	2026-04-18 10:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-75	14	9	3	38	OUTBOUND	SCHEDULED	TRP-3-1-O	2026-04-18 10:00:00+02	2026-04-18 11:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-76	14	9	3	38	INBOUND	SCHEDULED	TRP-3-1-I	2026-04-18 11:30:00+02	2026-04-18 12:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-77	15	10	3	39	OUTBOUND	SCHEDULED	TRP-3-2-O	2026-04-18 09:00:00+02	2026-04-18 10:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-78	15	10	3	39	INBOUND	SCHEDULED	TRP-3-2-I	2026-04-18 10:30:00+02	2026-04-18 11:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-79	16	11	3	40	OUTBOUND	SCHEDULED	TRP-3-0-O	2026-04-18 17:00:00+02	2026-04-18 18:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-80	16	11	3	40	INBOUND	SCHEDULED	TRP-3-0-I	2026-04-18 18:30:00+02	2026-04-18 19:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-81	17	11	3	41	OUTBOUND	SCHEDULED	TRP-3-1-O	2026-04-18 19:00:00+02	2026-04-18 20:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-82	17	11	3	41	INBOUND	SCHEDULED	TRP-3-1-I	2026-04-18 20:30:00+02	2026-04-18 21:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-83	18	12	3	42	OUTBOUND	SCHEDULED	TRP-3-2-O	2026-04-18 18:00:00+02	2026-04-18 19:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-84	18	12	3	42	INBOUND	SCHEDULED	TRP-3-2-I	2026-04-18 19:30:00+02	2026-04-18 20:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-85	19	13	4	43	OUTBOUND	SCHEDULED	TRP-4-0-O	2026-04-18 08:00:00+02	2026-04-18 08:30:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-86	19	13	4	43	INBOUND	SCHEDULED	TRP-4-0-I	2026-04-18 08:45:00+02	2026-04-18 09:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-87	20	13	4	44	OUTBOUND	SCHEDULED	TRP-4-1-O	2026-04-18 10:00:00+02	2026-04-18 10:30:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-88	20	13	4	44	INBOUND	SCHEDULED	TRP-4-1-I	2026-04-18 10:45:00+02	2026-04-18 11:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-89	21	14	4	45	OUTBOUND	SCHEDULED	TRP-4-2-O	2026-04-18 09:00:00+02	2026-04-18 09:30:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-90	21	14	4	45	INBOUND	SCHEDULED	TRP-4-2-I	2026-04-18 09:45:00+02	2026-04-18 10:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-91	22	15	4	46	OUTBOUND	SCHEDULED	TRP-4-0-O	2026-04-18 17:00:00+02	2026-04-18 17:30:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-92	22	15	4	46	INBOUND	SCHEDULED	TRP-4-0-I	2026-04-18 17:45:00+02	2026-04-18 18:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-93	23	15	4	47	OUTBOUND	SCHEDULED	TRP-4-1-O	2026-04-18 19:00:00+02	2026-04-18 19:30:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-94	23	15	4	47	INBOUND	SCHEDULED	TRP-4-1-I	2026-04-18 19:45:00+02	2026-04-18 20:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-95	24	16	4	48	OUTBOUND	SCHEDULED	TRP-4-2-O	2026-04-18 18:00:00+02	2026-04-18 18:30:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-96	24	16	4	48	INBOUND	SCHEDULED	TRP-4-2-I	2026-04-18 18:45:00+02	2026-04-18 19:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-69	11	7	2	35	OUTBOUND	SCHEDULED	TRP-2-1-O	2026-04-18 19:00:00+02	2026-04-18 20:00:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02
-59	6	4	1	30	OUTBOUND	COMPLETED	TRP-1-2-O	2026-04-18 12:04:00+02	2026-04-18 18:45:00+02	2026-04-18 12:01:07.744174+02	2026-04-18 12:41:14.022359+02	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 12:41:13.997074+02
-60	6	4	1	30	INBOUND	COMPLETED	TRP-1-2-I	2026-04-18 13:08:00+02	2026-04-18 13:15:00+02	2026-04-18 13:07:15.473779+02	2026-04-18 13:41:34.050223+02	0	0	f	f	0	f	t	\N	2026-04-18 04:19:40.466296+02	2026-04-18 13:41:34.03498+02
-109	25	3	1	55	OUTBOUND	SCHEDULED	TRP-1-0-O	2026-04-29 09:00:00+03	2026-04-29 09:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03
-110	25	3	1	55	INBOUND	SCHEDULED	TRP-1-0-I	2026-04-29 10:00:00+03	2026-04-29 10:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03
-111	26	3	1	56	OUTBOUND	SCHEDULED	TRP-1-1-O	2026-04-29 11:00:00+03	2026-04-29 11:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03
-112	26	3	1	56	INBOUND	SCHEDULED	TRP-1-1-I	2026-04-29 12:00:00+03	2026-04-29 12:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03
-113	27	5	1	57	OUTBOUND	SCHEDULED	TRP-1-2-O	2026-04-29 10:00:00+03	2026-04-29 10:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03
-114	27	5	1	57	INBOUND	SCHEDULED	TRP-1-2-I	2026-04-29 11:00:00+03	2026-04-29 11:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03
-115	28	7	1	58	OUTBOUND	SCHEDULED	TRP-1-0-O	2026-04-29 18:00:00+03	2026-04-29 18:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03
-116	28	7	1	58	INBOUND	SCHEDULED	TRP-1-0-I	2026-04-29 19:00:00+03	2026-04-29 19:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03
-117	29	7	1	59	OUTBOUND	SCHEDULED	TRP-1-1-O	2026-04-29 20:00:00+03	2026-04-29 20:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03
-118	29	7	1	59	INBOUND	SCHEDULED	TRP-1-1-I	2026-04-29 21:00:00+03	2026-04-29 21:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03
-119	30	8	1	60	OUTBOUND	SCHEDULED	TRP-1-2-O	2026-04-29 19:00:00+03	2026-04-29 19:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03
-120	30	8	1	60	INBOUND	SCHEDULED	TRP-1-2-I	2026-04-29 20:00:00+03	2026-04-29 20:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03
+COPY public.trips (id, driver_id, vehicle_id, route_id, rotation_assignment_id, direction, status, trip_number, scheduled_start, scheduled_end, actual_start, actual_end, passenger_count, crowding_score, is_crowded, driver_crowding_report, fare_collected, is_extra_dispatch, is_late, notes, created_at, updated_at, is_active) FROM stdin;
+49	1	1	1	25	OUTBOUND	SCHEDULED	TRP-1-0-O	2026-04-18 08:00:00+02	2026-04-18 08:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+50	1	1	1	25	INBOUND	SCHEDULED	TRP-1-0-I	2026-04-18 09:00:00+02	2026-04-18 09:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+51	2	1	1	26	OUTBOUND	SCHEDULED	TRP-1-1-O	2026-04-18 10:00:00+02	2026-04-18 10:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+52	2	1	1	26	INBOUND	SCHEDULED	TRP-1-1-I	2026-04-18 11:00:00+02	2026-04-18 11:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+53	3	2	1	27	OUTBOUND	SCHEDULED	TRP-1-2-O	2026-04-18 09:00:00+02	2026-04-18 09:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+54	3	2	1	27	INBOUND	SCHEDULED	TRP-1-2-I	2026-04-18 10:00:00+02	2026-04-18 10:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+55	4	3	1	28	OUTBOUND	SCHEDULED	TRP-1-0-O	2026-04-18 17:00:00+02	2026-04-18 17:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+72	12	8	2	36	INBOUND	SCHEDULED	TRP-2-2-I	2026-04-18 19:15:00+02	2026-04-18 20:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+73	13	9	3	37	OUTBOUND	SCHEDULED	TRP-3-0-O	2026-04-18 08:00:00+02	2026-04-18 09:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+74	13	9	3	37	INBOUND	SCHEDULED	TRP-3-0-I	2026-04-18 09:30:00+02	2026-04-18 10:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+75	14	9	3	38	OUTBOUND	SCHEDULED	TRP-3-1-O	2026-04-18 10:00:00+02	2026-04-18 11:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+76	14	9	3	38	INBOUND	SCHEDULED	TRP-3-1-I	2026-04-18 11:30:00+02	2026-04-18 12:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+77	15	10	3	39	OUTBOUND	SCHEDULED	TRP-3-2-O	2026-04-18 09:00:00+02	2026-04-18 10:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+78	15	10	3	39	INBOUND	SCHEDULED	TRP-3-2-I	2026-04-18 10:30:00+02	2026-04-18 11:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+79	16	11	3	40	OUTBOUND	SCHEDULED	TRP-3-0-O	2026-04-18 17:00:00+02	2026-04-18 18:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+80	16	11	3	40	INBOUND	SCHEDULED	TRP-3-0-I	2026-04-18 18:30:00+02	2026-04-18 19:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+81	17	11	3	41	OUTBOUND	SCHEDULED	TRP-3-1-O	2026-04-18 19:00:00+02	2026-04-18 20:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+82	17	11	3	41	INBOUND	SCHEDULED	TRP-3-1-I	2026-04-18 20:30:00+02	2026-04-18 21:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+83	18	12	3	42	OUTBOUND	SCHEDULED	TRP-3-2-O	2026-04-18 18:00:00+02	2026-04-18 19:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+84	18	12	3	42	INBOUND	SCHEDULED	TRP-3-2-I	2026-04-18 19:30:00+02	2026-04-18 20:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+85	19	13	4	43	OUTBOUND	SCHEDULED	TRP-4-0-O	2026-04-18 08:00:00+02	2026-04-18 08:30:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+86	19	13	4	43	INBOUND	SCHEDULED	TRP-4-0-I	2026-04-18 08:45:00+02	2026-04-18 09:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+87	20	13	4	44	OUTBOUND	SCHEDULED	TRP-4-1-O	2026-04-18 10:00:00+02	2026-04-18 10:30:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+88	20	13	4	44	INBOUND	SCHEDULED	TRP-4-1-I	2026-04-18 10:45:00+02	2026-04-18 11:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+89	21	14	4	45	OUTBOUND	SCHEDULED	TRP-4-2-O	2026-04-18 09:00:00+02	2026-04-18 09:30:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+90	21	14	4	45	INBOUND	SCHEDULED	TRP-4-2-I	2026-04-18 09:45:00+02	2026-04-18 10:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+91	22	15	4	46	OUTBOUND	SCHEDULED	TRP-4-0-O	2026-04-18 17:00:00+02	2026-04-18 17:30:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+92	22	15	4	46	INBOUND	SCHEDULED	TRP-4-0-I	2026-04-18 17:45:00+02	2026-04-18 18:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+93	23	15	4	47	OUTBOUND	SCHEDULED	TRP-4-1-O	2026-04-18 19:00:00+02	2026-04-18 19:30:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+94	23	15	4	47	INBOUND	SCHEDULED	TRP-4-1-I	2026-04-18 19:45:00+02	2026-04-18 20:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+95	24	16	4	48	OUTBOUND	SCHEDULED	TRP-4-2-O	2026-04-18 18:00:00+02	2026-04-18 18:30:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+96	24	16	4	48	INBOUND	SCHEDULED	TRP-4-2-I	2026-04-18 18:45:00+02	2026-04-18 19:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+69	11	7	2	35	OUTBOUND	SCHEDULED	TRP-2-1-O	2026-04-18 19:00:00+02	2026-04-18 20:00:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+59	6	4	1	30	OUTBOUND	COMPLETED	TRP-1-2-O	2026-04-18 12:04:00+02	2026-04-18 18:45:00+02	2026-04-18 12:01:07.744174+02	2026-04-18 12:41:14.022359+02	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 12:41:13.997074+02	f
+60	6	4	1	30	INBOUND	COMPLETED	TRP-1-2-I	2026-04-18 13:08:00+02	2026-04-18 13:15:00+02	2026-04-18 13:07:15.473779+02	2026-04-18 13:41:34.050223+02	0	0	f	f	0	f	t	\N	2026-04-18 04:19:40.466296+02	2026-04-18 13:41:34.03498+02	f
+56	4	3	1	28	INBOUND	SCHEDULED	TRP-1-0-I	2026-04-18 18:00:00+02	2026-04-18 18:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+57	5	3	1	29	OUTBOUND	SCHEDULED	TRP-1-1-O	2026-04-18 19:00:00+02	2026-04-18 19:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+58	5	3	1	29	INBOUND	SCHEDULED	TRP-1-1-I	2026-04-18 20:00:00+02	2026-04-18 20:45:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+61	7	5	2	31	OUTBOUND	SCHEDULED	TRP-2-0-O	2026-04-18 08:00:00+02	2026-04-18 09:00:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+62	7	5	2	31	INBOUND	SCHEDULED	TRP-2-0-I	2026-04-18 09:15:00+02	2026-04-18 10:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+63	8	5	2	32	OUTBOUND	SCHEDULED	TRP-2-1-O	2026-04-18 10:00:00+02	2026-04-18 11:00:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+64	8	5	2	32	INBOUND	SCHEDULED	TRP-2-1-I	2026-04-18 11:15:00+02	2026-04-18 12:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+65	9	6	2	33	OUTBOUND	SCHEDULED	TRP-2-2-O	2026-04-18 09:00:00+02	2026-04-18 10:00:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+66	9	6	2	33	INBOUND	SCHEDULED	TRP-2-2-I	2026-04-18 10:15:00+02	2026-04-18 11:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+67	10	7	2	34	OUTBOUND	SCHEDULED	TRP-2-0-O	2026-04-18 17:00:00+02	2026-04-18 18:00:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+68	10	7	2	34	INBOUND	SCHEDULED	TRP-2-0-I	2026-04-18 18:15:00+02	2026-04-18 19:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+70	11	7	2	35	INBOUND	SCHEDULED	TRP-2-1-I	2026-04-18 20:15:00+02	2026-04-18 21:15:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+71	12	8	2	36	OUTBOUND	SCHEDULED	TRP-2-2-O	2026-04-18 18:00:00+02	2026-04-18 19:00:00+02	\N	\N	0	0	f	f	0	f	f	\N	2026-04-18 04:19:40.466296+02	2026-04-18 04:19:40.466296+02	f
+109	25	3	1	55	OUTBOUND	SCHEDULED	TRP-1-0-O	2026-04-29 09:00:00+03	2026-04-29 09:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03	f
+110	25	3	1	55	INBOUND	SCHEDULED	TRP-1-0-I	2026-04-29 10:00:00+03	2026-04-29 10:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03	f
+111	26	3	1	56	OUTBOUND	SCHEDULED	TRP-1-1-O	2026-04-29 11:00:00+03	2026-04-29 11:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03	f
+112	26	3	1	56	INBOUND	SCHEDULED	TRP-1-1-I	2026-04-29 12:00:00+03	2026-04-29 12:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03	f
+113	27	5	1	57	OUTBOUND	SCHEDULED	TRP-1-2-O	2026-04-29 10:00:00+03	2026-04-29 10:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03	f
+114	27	5	1	57	INBOUND	SCHEDULED	TRP-1-2-I	2026-04-29 11:00:00+03	2026-04-29 11:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03	f
+115	28	7	1	58	OUTBOUND	SCHEDULED	TRP-1-0-O	2026-04-29 18:00:00+03	2026-04-29 18:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03	f
+116	28	7	1	58	INBOUND	SCHEDULED	TRP-1-0-I	2026-04-29 19:00:00+03	2026-04-29 19:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03	f
+117	29	7	1	59	OUTBOUND	SCHEDULED	TRP-1-1-O	2026-04-29 20:00:00+03	2026-04-29 20:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03	f
+118	29	7	1	59	INBOUND	SCHEDULED	TRP-1-1-I	2026-04-29 21:00:00+03	2026-04-29 21:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03	f
+119	30	8	1	60	OUTBOUND	SCHEDULED	TRP-1-2-O	2026-04-29 19:00:00+03	2026-04-29 19:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03	f
+120	30	8	1	60	INBOUND	SCHEDULED	TRP-1-2-I	2026-04-29 20:00:00+03	2026-04-29 20:45:00+03	\N	\N	0	0	f	f	0	f	f	\N	2026-04-29 00:36:31.556553+03	2026-04-29 00:36:31.556553+03	f
 \.
 
 
 --
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.users (id, email, hashed_password, full_name, role, phone, preferred_language, is_active, is_email_verified, email_verification_token, password_reset_token, password_reset_expires, created_at, updated_at) FROM stdin;
@@ -1781,7 +1668,7 @@ COPY public.users (id, email, hashed_password, full_name, role, phone, preferred
 
 
 --
--- Data for Name: vehicles; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: vehicles; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.vehicles (id, plate_number, model, year, capacity, status, garage_id, current_latitude, current_longitude, mileage, fuel_level, last_maintenance_date, created_at, updated_at) FROM stdin;
@@ -1807,154 +1694,154 @@ COPY public.vehicles (id, plate_number, model, year, capacity, status, garage_id
 
 
 --
--- Name: audit_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: audit_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.audit_logs_id_seq', 38, true);
+SELECT pg_catalog.setval('public.audit_logs_id_seq', 39, true);
 
 
 --
--- Name: break_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: break_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.break_logs_id_seq', 1, false);
 
 
 --
--- Name: camera_readings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: camera_readings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.camera_readings_id_seq', 1, false);
 
 
 --
--- Name: crowding_events_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: crowding_events_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.crowding_events_id_seq', 1, false);
 
 
 --
--- Name: daily_reports_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: daily_reports_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.daily_reports_id_seq', 1, false);
 
 
 --
--- Name: driver_exchanges_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: driver_exchanges_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.driver_exchanges_id_seq', 24, true);
 
 
 --
--- Name: drivers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: drivers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.drivers_id_seq', 30, true);
 
 
 --
--- Name: garages_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: garages_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.garages_id_seq', 1, true);
 
 
 --
--- Name: gate_cameras_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: gate_cameras_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.gate_cameras_id_seq', 1, false);
 
 
 --
--- Name: gate_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: gate_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.gate_logs_id_seq', 55, true);
 
 
 --
--- Name: gps_tracking_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: gps_tracking_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.gps_tracking_id_seq', 1, false);
 
 
 --
--- Name: maintenance_requests_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: maintenance_requests_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.maintenance_requests_id_seq', 3, true);
 
 
 --
--- Name: notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.notifications_id_seq', 9, true);
 
 
 --
--- Name: reroute_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: reroute_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.reroute_logs_id_seq', 5, true);
 
 
 --
--- Name: rotation_assignments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: rotation_assignments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.rotation_assignments_id_seq', 60, true);
 
 
 --
--- Name: route_stops_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: route_stops_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.route_stops_id_seq', 16, true);
 
 
 --
--- Name: routes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: routes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.routes_id_seq', 4, true);
 
 
 --
--- Name: tickets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: tickets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.tickets_id_seq', 1, false);
 
 
 --
--- Name: trips_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: trips_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.trips_id_seq', 120, true);
 
 
 --
--- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.users_id_seq', 35, true);
 
 
 --
--- Name: vehicles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: vehicles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.vehicles_id_seq', 18, true);
 
 
 --
--- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.alembic_version
@@ -1962,7 +1849,7 @@ ALTER TABLE ONLY public.alembic_version
 
 
 --
--- Name: audit_logs audit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: audit_logs audit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.audit_logs
@@ -1970,7 +1857,7 @@ ALTER TABLE ONLY public.audit_logs
 
 
 --
--- Name: break_logs break_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: break_logs break_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.break_logs
@@ -1978,7 +1865,7 @@ ALTER TABLE ONLY public.break_logs
 
 
 --
--- Name: camera_readings camera_readings_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: camera_readings camera_readings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.camera_readings
@@ -1986,7 +1873,7 @@ ALTER TABLE ONLY public.camera_readings
 
 
 --
--- Name: crowding_events crowding_events_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: crowding_events crowding_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.crowding_events
@@ -1994,7 +1881,7 @@ ALTER TABLE ONLY public.crowding_events
 
 
 --
--- Name: daily_reports daily_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: daily_reports daily_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.daily_reports
@@ -2002,7 +1889,7 @@ ALTER TABLE ONLY public.daily_reports
 
 
 --
--- Name: daily_reports daily_reports_report_date_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: daily_reports daily_reports_report_date_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.daily_reports
@@ -2010,7 +1897,7 @@ ALTER TABLE ONLY public.daily_reports
 
 
 --
--- Name: driver_exchanges driver_exchanges_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: driver_exchanges driver_exchanges_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.driver_exchanges
@@ -2018,7 +1905,7 @@ ALTER TABLE ONLY public.driver_exchanges
 
 
 --
--- Name: drivers drivers_license_number_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: drivers drivers_license_number_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.drivers
@@ -2026,7 +1913,7 @@ ALTER TABLE ONLY public.drivers
 
 
 --
--- Name: drivers drivers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: drivers drivers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.drivers
@@ -2034,7 +1921,7 @@ ALTER TABLE ONLY public.drivers
 
 
 --
--- Name: drivers drivers_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: drivers drivers_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.drivers
@@ -2042,7 +1929,7 @@ ALTER TABLE ONLY public.drivers
 
 
 --
--- Name: garages garages_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: garages garages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.garages
@@ -2050,7 +1937,7 @@ ALTER TABLE ONLY public.garages
 
 
 --
--- Name: gate_cameras gate_cameras_ip_address_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: gate_cameras gate_cameras_ip_address_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.gate_cameras
@@ -2058,7 +1945,7 @@ ALTER TABLE ONLY public.gate_cameras
 
 
 --
--- Name: gate_cameras gate_cameras_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: gate_cameras gate_cameras_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.gate_cameras
@@ -2066,7 +1953,7 @@ ALTER TABLE ONLY public.gate_cameras
 
 
 --
--- Name: gate_logs gate_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: gate_logs gate_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.gate_logs
@@ -2074,7 +1961,7 @@ ALTER TABLE ONLY public.gate_logs
 
 
 --
--- Name: gps_tracking gps_tracking_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: gps_tracking gps_tracking_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.gps_tracking
@@ -2082,7 +1969,7 @@ ALTER TABLE ONLY public.gps_tracking
 
 
 --
--- Name: maintenance_requests maintenance_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: maintenance_requests maintenance_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.maintenance_requests
@@ -2090,7 +1977,7 @@ ALTER TABLE ONLY public.maintenance_requests
 
 
 --
--- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.notifications
@@ -2098,7 +1985,7 @@ ALTER TABLE ONLY public.notifications
 
 
 --
--- Name: reroute_logs reroute_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: reroute_logs reroute_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.reroute_logs
@@ -2106,7 +1993,7 @@ ALTER TABLE ONLY public.reroute_logs
 
 
 --
--- Name: rotation_assignments rotation_assignments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: rotation_assignments rotation_assignments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rotation_assignments
@@ -2114,7 +2001,7 @@ ALTER TABLE ONLY public.rotation_assignments
 
 
 --
--- Name: route_stops route_stops_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: route_stops route_stops_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.route_stops
@@ -2122,7 +2009,7 @@ ALTER TABLE ONLY public.route_stops
 
 
 --
--- Name: routes routes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: routes routes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.routes
@@ -2130,7 +2017,7 @@ ALTER TABLE ONLY public.routes
 
 
 --
--- Name: tickets tickets_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: tickets tickets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tickets
@@ -2138,7 +2025,7 @@ ALTER TABLE ONLY public.tickets
 
 
 --
--- Name: trips trips_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: trips trips_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.trips
@@ -2146,7 +2033,7 @@ ALTER TABLE ONLY public.trips
 
 
 --
--- Name: rotation_assignments uix_rotation_assignment; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: rotation_assignments uix_rotation_assignment; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rotation_assignments
@@ -2154,7 +2041,7 @@ ALTER TABLE ONLY public.rotation_assignments
 
 
 --
--- Name: route_stops uix_route_stop_order; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: route_stops uix_route_stop_order; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.route_stops
@@ -2162,7 +2049,7 @@ ALTER TABLE ONLY public.route_stops
 
 
 --
--- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -2170,7 +2057,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -2178,7 +2065,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: vehicles vehicles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: vehicles vehicles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.vehicles
@@ -2186,7 +2073,7 @@ ALTER TABLE ONLY public.vehicles
 
 
 --
--- Name: vehicles vehicles_plate_number_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: vehicles vehicles_plate_number_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.vehicles
@@ -2194,259 +2081,266 @@ ALTER TABLE ONLY public.vehicles
 
 
 --
--- Name: idx_crowding_trip; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_crowding_trip; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_crowding_trip ON public.crowding_events USING btree (trip_id);
 
 
 --
--- Name: idx_gps_vehicle_time; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_gps_vehicle_time; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_gps_vehicle_time ON public.gps_tracking USING btree (vehicle_id, recorded_at);
 
 
 --
--- Name: ix_audit_logs_created_at; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_audit_logs_created_at; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_audit_logs_created_at ON public.audit_logs USING btree (created_at);
 
 
 --
--- Name: ix_audit_logs_entity; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_audit_logs_entity; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_audit_logs_entity ON public.audit_logs USING btree (entity_type, entity_id);
 
 
 --
--- Name: ix_audit_logs_user_created; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_audit_logs_user_created; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_audit_logs_user_created ON public.audit_logs USING btree (user_id, created_at);
 
 
 --
--- Name: ix_break_logs_driver_shift_date; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_break_logs_driver_shift_date; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_break_logs_driver_shift_date ON public.break_logs USING btree (driver_id, shift_date);
 
 
 --
--- Name: ix_break_logs_driver_start_time; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_break_logs_driver_start_time; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_break_logs_driver_start_time ON public.break_logs USING btree (driver_id, start_time);
 
 
 --
--- Name: ix_camera_readings_trip_id; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_camera_readings_trip_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_camera_readings_trip_id ON public.camera_readings USING btree (trip_id);
 
 
 --
--- Name: ix_camera_readings_vehicle_created; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_camera_readings_vehicle_created; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_camera_readings_vehicle_created ON public.camera_readings USING btree (vehicle_id, created_at);
 
 
 --
--- Name: ix_driver_exchanges_rotation_assignment_id; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_driver_exchanges_rotation_assignment_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_driver_exchanges_rotation_assignment_id ON public.driver_exchanges USING btree (rotation_assignment_id);
 
 
 --
--- Name: ix_drivers_status; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_drivers_status; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_drivers_status ON public.drivers USING btree (status);
 
 
 --
--- Name: ix_gate_logs_created_at; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_gate_logs_created_at; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_gate_logs_created_at ON public.gate_logs USING btree (created_at);
 
 
 --
--- Name: ix_gate_logs_plate_created; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_gate_logs_plate_created; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_gate_logs_plate_created ON public.gate_logs USING btree (plate_number, created_at);
 
 
 --
--- Name: ix_maint_requests_status_created; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_maint_requests_status_created; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_maint_requests_status_created ON public.maintenance_requests USING btree (status, created_at);
 
 
 --
--- Name: ix_maint_requests_vehicle_id; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_maint_requests_vehicle_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_maint_requests_vehicle_id ON public.maintenance_requests USING btree (vehicle_id);
 
 
 --
--- Name: ix_notifications_user_created; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_notifications_user_created; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_notifications_user_created ON public.notifications USING btree (user_id, created_at);
 
 
 --
--- Name: ix_notifications_user_status; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_notifications_user_status; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_notifications_user_status ON public.notifications USING btree (user_id, status);
 
 
 --
--- Name: ix_reroute_logs_driver_id; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_reroute_logs_driver_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_reroute_logs_driver_id ON public.reroute_logs USING btree (driver_id);
 
 
 --
--- Name: ix_reroute_logs_status_requested; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_reroute_logs_status_requested; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_reroute_logs_status_requested ON public.reroute_logs USING btree (status, requested_at);
 
 
 --
--- Name: ix_rotation_assignments_shift_date; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_rotation_assignments_shift_date; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_rotation_assignments_shift_date ON public.rotation_assignments USING btree (shift_date);
 
 
 --
--- Name: ix_routes_is_active; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_routes_is_active; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_routes_is_active ON public.routes USING btree (is_active);
 
 
 --
--- Name: ix_tickets_created_at; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_tickets_created_at; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_tickets_created_at ON public.tickets USING btree (created_at);
 
 
 --
--- Name: ix_tickets_ticket_code; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_tickets_ticket_code; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX ix_tickets_ticket_code ON public.tickets USING btree (ticket_code);
 
 
 --
--- Name: ix_tickets_trip_id; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_tickets_trip_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_tickets_trip_id ON public.tickets USING btree (trip_id);
 
 
 --
--- Name: ix_tickets_trip_status; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_tickets_trip_status; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_tickets_trip_status ON public.tickets USING btree (trip_id, status);
 
 
 --
--- Name: ix_trips_driver_scheduled; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_trips_driver_scheduled; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_trips_driver_scheduled ON public.trips USING btree (driver_id, scheduled_start);
 
 
 --
--- Name: ix_trips_route_scheduled; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_trips_is_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX ix_trips_is_active ON public.trips USING btree (is_active);
+
+
+--
+-- Name: ix_trips_route_scheduled; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_trips_route_scheduled ON public.trips USING btree (route_id, scheduled_start);
 
 
 --
--- Name: ix_trips_scheduled_start; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_trips_scheduled_start; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_trips_scheduled_start ON public.trips USING btree (scheduled_start);
 
 
 --
--- Name: ix_trips_status; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_trips_status; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_trips_status ON public.trips USING btree (status);
 
 
 --
--- Name: ix_trips_status_scheduled; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_trips_status_scheduled; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_trips_status_scheduled ON public.trips USING btree (status, scheduled_start);
 
 
 --
--- Name: ix_trips_vehicle_scheduled; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_trips_vehicle_scheduled; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_trips_vehicle_scheduled ON public.trips USING btree (vehicle_id, scheduled_start);
 
 
 --
--- Name: ix_users_email_verification_token; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_users_email_verification_token; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX ix_users_email_verification_token ON public.users USING btree (email_verification_token);
 
 
 --
--- Name: ix_users_password_reset_token; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_users_password_reset_token; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX ix_users_password_reset_token ON public.users USING btree (password_reset_token);
 
 
 --
--- Name: ix_users_role_is_active; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_users_role_is_active; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_users_role_is_active ON public.users USING btree (role, is_active);
 
 
 --
--- Name: ix_vehicles_status; Type: INDEX; Schema: public; Owner: postgres
+-- Name: ix_vehicles_status; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_vehicles_status ON public.vehicles USING btree (status);
 
 
 --
--- Name: uix_tickets_trip_seat; Type: INDEX; Schema: public; Owner: postgres
+-- Name: uix_tickets_trip_seat; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX uix_tickets_trip_seat ON public.tickets USING btree (trip_id, seat_number) WHERE (seat_number IS NOT NULL);
 
 
 --
--- Name: audit_logs audit_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: audit_logs audit_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.audit_logs
@@ -2454,7 +2348,7 @@ ALTER TABLE ONLY public.audit_logs
 
 
 --
--- Name: break_logs break_logs_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: break_logs break_logs_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.break_logs
@@ -2462,7 +2356,7 @@ ALTER TABLE ONLY public.break_logs
 
 
 --
--- Name: break_logs break_logs_replaced_by_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: break_logs break_logs_replaced_by_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.break_logs
@@ -2470,7 +2364,7 @@ ALTER TABLE ONLY public.break_logs
 
 
 --
--- Name: camera_readings camera_readings_trip_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: camera_readings camera_readings_trip_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.camera_readings
@@ -2478,7 +2372,7 @@ ALTER TABLE ONLY public.camera_readings
 
 
 --
--- Name: camera_readings camera_readings_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: camera_readings camera_readings_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.camera_readings
@@ -2486,7 +2380,7 @@ ALTER TABLE ONLY public.camera_readings
 
 
 --
--- Name: crowding_events crowding_events_trip_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: crowding_events crowding_events_trip_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.crowding_events
@@ -2494,7 +2388,7 @@ ALTER TABLE ONLY public.crowding_events
 
 
 --
--- Name: crowding_events crowding_events_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: crowding_events crowding_events_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.crowding_events
@@ -2502,7 +2396,7 @@ ALTER TABLE ONLY public.crowding_events
 
 
 --
--- Name: driver_exchanges driver_exchanges_incoming_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: driver_exchanges driver_exchanges_incoming_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.driver_exchanges
@@ -2510,7 +2404,7 @@ ALTER TABLE ONLY public.driver_exchanges
 
 
 --
--- Name: driver_exchanges driver_exchanges_outgoing_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: driver_exchanges driver_exchanges_outgoing_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.driver_exchanges
@@ -2518,7 +2412,7 @@ ALTER TABLE ONLY public.driver_exchanges
 
 
 --
--- Name: driver_exchanges driver_exchanges_rotation_assignment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: driver_exchanges driver_exchanges_rotation_assignment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.driver_exchanges
@@ -2526,7 +2420,7 @@ ALTER TABLE ONLY public.driver_exchanges
 
 
 --
--- Name: driver_exchanges driver_exchanges_trip_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: driver_exchanges driver_exchanges_trip_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.driver_exchanges
@@ -2534,7 +2428,7 @@ ALTER TABLE ONLY public.driver_exchanges
 
 
 --
--- Name: drivers drivers_current_route_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: drivers drivers_current_route_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.drivers
@@ -2542,7 +2436,7 @@ ALTER TABLE ONLY public.drivers
 
 
 --
--- Name: drivers drivers_current_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: drivers drivers_current_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.drivers
@@ -2550,7 +2444,7 @@ ALTER TABLE ONLY public.drivers
 
 
 --
--- Name: drivers drivers_garage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: drivers drivers_garage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.drivers
@@ -2558,7 +2452,7 @@ ALTER TABLE ONLY public.drivers
 
 
 --
--- Name: drivers drivers_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: drivers drivers_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.drivers
@@ -2566,7 +2460,7 @@ ALTER TABLE ONLY public.drivers
 
 
 --
--- Name: gate_logs gate_logs_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: gate_logs gate_logs_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.gate_logs
@@ -2574,7 +2468,7 @@ ALTER TABLE ONLY public.gate_logs
 
 
 --
--- Name: gps_tracking gps_tracking_trip_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: gps_tracking gps_tracking_trip_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.gps_tracking
@@ -2582,7 +2476,7 @@ ALTER TABLE ONLY public.gps_tracking
 
 
 --
--- Name: gps_tracking gps_tracking_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: gps_tracking gps_tracking_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.gps_tracking
@@ -2590,7 +2484,7 @@ ALTER TABLE ONLY public.gps_tracking
 
 
 --
--- Name: maintenance_requests maintenance_requests_approved_by_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: maintenance_requests maintenance_requests_approved_by_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.maintenance_requests
@@ -2598,7 +2492,7 @@ ALTER TABLE ONLY public.maintenance_requests
 
 
 --
--- Name: maintenance_requests maintenance_requests_requested_by_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: maintenance_requests maintenance_requests_requested_by_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.maintenance_requests
@@ -2606,7 +2500,7 @@ ALTER TABLE ONLY public.maintenance_requests
 
 
 --
--- Name: maintenance_requests maintenance_requests_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: maintenance_requests maintenance_requests_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.maintenance_requests
@@ -2614,7 +2508,7 @@ ALTER TABLE ONLY public.maintenance_requests
 
 
 --
--- Name: notifications notifications_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: notifications notifications_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.notifications
@@ -2622,7 +2516,7 @@ ALTER TABLE ONLY public.notifications
 
 
 --
--- Name: reroute_logs reroute_logs_approved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: reroute_logs reroute_logs_approved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.reroute_logs
@@ -2630,7 +2524,7 @@ ALTER TABLE ONLY public.reroute_logs
 
 
 --
--- Name: reroute_logs reroute_logs_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: reroute_logs reroute_logs_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.reroute_logs
@@ -2638,7 +2532,7 @@ ALTER TABLE ONLY public.reroute_logs
 
 
 --
--- Name: reroute_logs reroute_logs_new_route_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: reroute_logs reroute_logs_new_route_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.reroute_logs
@@ -2646,7 +2540,7 @@ ALTER TABLE ONLY public.reroute_logs
 
 
 --
--- Name: reroute_logs reroute_logs_original_route_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: reroute_logs reroute_logs_original_route_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.reroute_logs
@@ -2654,7 +2548,7 @@ ALTER TABLE ONLY public.reroute_logs
 
 
 --
--- Name: reroute_logs reroute_logs_trip_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: reroute_logs reroute_logs_trip_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.reroute_logs
@@ -2662,7 +2556,7 @@ ALTER TABLE ONLY public.reroute_logs
 
 
 --
--- Name: rotation_assignments rotation_assignments_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: rotation_assignments rotation_assignments_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rotation_assignments
@@ -2670,7 +2564,7 @@ ALTER TABLE ONLY public.rotation_assignments
 
 
 --
--- Name: rotation_assignments rotation_assignments_route_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: rotation_assignments rotation_assignments_route_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rotation_assignments
@@ -2678,7 +2572,7 @@ ALTER TABLE ONLY public.rotation_assignments
 
 
 --
--- Name: rotation_assignments rotation_assignments_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: rotation_assignments rotation_assignments_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rotation_assignments
@@ -2686,7 +2580,7 @@ ALTER TABLE ONLY public.rotation_assignments
 
 
 --
--- Name: route_stops route_stops_route_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: route_stops route_stops_route_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.route_stops
@@ -2694,7 +2588,7 @@ ALTER TABLE ONLY public.route_stops
 
 
 --
--- Name: tickets tickets_trip_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: tickets tickets_trip_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tickets
@@ -2702,7 +2596,7 @@ ALTER TABLE ONLY public.tickets
 
 
 --
--- Name: trips trips_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: trips trips_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.trips
@@ -2710,7 +2604,7 @@ ALTER TABLE ONLY public.trips
 
 
 --
--- Name: trips trips_rotation_assignment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: trips trips_rotation_assignment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.trips
@@ -2718,7 +2612,7 @@ ALTER TABLE ONLY public.trips
 
 
 --
--- Name: trips trips_route_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: trips trips_route_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.trips
@@ -2726,7 +2620,7 @@ ALTER TABLE ONLY public.trips
 
 
 --
--- Name: trips trips_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: trips trips_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.trips
@@ -2734,7 +2628,7 @@ ALTER TABLE ONLY public.trips
 
 
 --
--- Name: vehicles vehicles_garage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: vehicles vehicles_garage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.vehicles
@@ -2742,16 +2636,7 @@ ALTER TABLE ONLY public.vehicles
 
 
 --
--- Name: SCHEMA public; Type: ACL; Schema: -; Owner: postgres
---
-
-REVOKE USAGE ON SCHEMA public FROM PUBLIC;
-GRANT ALL ON SCHEMA public TO PUBLIC;
-
-
---
 -- PostgreSQL database dump complete
 --
 
-\unrestrict My3ltfI3RCBAdIU3fXYa3SaZ9cO3PARy2S9cgskOOac8sVbsBtsezNjQtEwDOD3
 

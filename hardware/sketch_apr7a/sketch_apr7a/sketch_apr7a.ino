@@ -6,11 +6,13 @@
 
 #include "hardware_config.h"
 #include <HTTPClient.h>
-#include <LiquidCrystal_I2C.h>
 #include <Preferences.h>
 #include <WiFi.h>
-#include <WiFiClientSecure.h>
-#include <Wire.h>
+#include <WiFiClient.h>
+// Brown-out detector registers — used in setup() to disable BOD as a
+// workaround for a flaky power supply. Not a real fix; see setup().
+#include "soc/rtc_cntl_reg.h"
+#include "soc/soc.h"
 
 // ─── Local camera URLs (LAN — plain HTTP) ────────────────────────────────────
 #define ENTRY_CAM_URL "http://" ENTRY_CAM_IP "/capture"
@@ -30,7 +32,6 @@
 
 // ─── Globals
 // ──────────────────────────────────────────────────────────────────
-LiquidCrystal_I2C lcd(0x27, 16, 2);
 Preferences prefs;
 
 volatile int carCount = 0;
@@ -109,30 +110,22 @@ bool shouldClose(bool isOpen, unsigned long openedAt, unsigned long lastSeen,
   return (now - lastSeen) >= GATE_CLEAR_HOLD_MS;
 }
 
-// ─── Display / LEDs
-// ───────────────────────────────────────────────────────────
+// ─── LEDs
+// ──────────────────────────────────────────────────────────────────
 void updateStatusLEDs() {
   bool full = (carCount >= MAX_CARS);
   digitalWrite(LED_ENTRY, full ? LOW : HIGH);
   digitalWrite(LED_FULL, full ? HIGH : LOW);
 }
-void showLCD() {
-  int free = MAX_CARS - (int)carCount;
-  if (free < 0)
-    free = 0;
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Free Slots:");
-  lcd.setCursor(0, 1);
-  lcd.print(free);
-}
 
-// ─── Log to Render backend (HTTPS) ───────────────────────────────────────────
+// ─── Log to backend (plain HTTP — backend is on the LAN) ─────────────────────
+// Was WiFiClientSecure, but the backend is plain HTTP on port 8000 and
+// mbedTLS handshake buffers (~12-16 KB) overflow the 8 KB Arduino loopTask
+// stack on the very first call from setup() → recursive panic at boot.
 void sendLog(const String &msg) {
   if (WiFi.status() != WL_CONNECTED)
     return;
-  WiFiClientSecure client;
-  client.setInsecure(); // skip SSL cert check — fine for LAN demo
+  WiFiClient client;
   HTTPClient http;
   http.begin(client, BACKEND_BASE "/log");
   http.addHeader("Content-Type", "application/json");
@@ -244,6 +237,13 @@ void exitGateTask(void * /*param*/) {
 // ─── Setup
 // ────────────────────────────────────────────────────────────────────
 void setup() {
+  // WORKAROUND: disable the brown-out detector. The dev board's 3.3V rail
+  // sags under transient load and the BOD was resetting the chip during
+  // boot. Disabling it lets the chip run, but flash/NVS writes during a
+  // dip can corrupt silently — replace the cable / wall-adapter / board
+  // and re-enable BOD before relying on this in production.
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
+
   Serial.begin(115200);
 
   pinMode(TRIG_IN, OUTPUT);
@@ -257,12 +257,6 @@ void setup() {
   digitalWrite(LED_FULL, LOW);
   digitalWrite(LED_EXIT, LOW);
 
-  Wire.begin(21, 22);
-  lcd.init();
-  lcd.backlight();
-  lcd.setCursor(0, 0);
-  lcd.print("Garago Starting");
-
   ledcAttach(SERVO_IN, pwmFreq, pwmResolution);
   ledcAttach(SERVO_OUT, pwmFreq, pwmResolution);
   setGateIn(false);
@@ -274,7 +268,6 @@ void setup() {
   carCount = prefs.getInt("carCount", 0);
   Serial.println("Restored carCount: " + String(carCount));
 
-  showLCD();
   updateStatusLEDs();
   Serial.println("ESP32 Master Gate Controller Ready");
   sendLog("ESP32 Master Ready");
@@ -315,7 +308,6 @@ void loop() {
     gateInOpen = false;
     carCount++;
     prefs.putInt("carCount", (int)carCount);
-    showLCD();
     updateStatusLEDs();
     Serial.println("Entry confirmed — count=" + String(carCount));
     sendLog("Entry confirmed — count=" + String(carCount));
@@ -327,7 +319,6 @@ void loop() {
     if (carCount > 0)
       carCount--;
     prefs.putInt("carCount", (int)carCount);
-    showLCD();
     updateStatusLEDs();
     Serial.println("Exit confirmed — count=" + String(carCount));
     sendLog("Exit confirmed — count=" + String(carCount));

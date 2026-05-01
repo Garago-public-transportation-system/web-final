@@ -184,7 +184,7 @@ async def ingest_camera(request: Request, data: CameraData, db: Annotated[AsyncS
         crowding_score=crowding_score,
     ))
 
-    # GAP-02: de-dup auto-dispatch and CrowdingEvent rows per trip so a flood
+    # De-dup auto-dispatch and CrowdingEvent rows per trip so a flood
     # of camera POSTs for the same trip can't create N events / N dispatches.
     already_dispatched = await db.scalar(
         select(func.count()).select_from(CrowdingEvent).where(

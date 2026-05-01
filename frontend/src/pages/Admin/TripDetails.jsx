@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
@@ -13,21 +13,30 @@ const TripDetails = () => {
     const addAlert = useAlertStore((s) => s.addAlert);
     const [trip, setTrip] = useState(null);
     const [loading, setLoading] = useState(true);
+    const pollRef = useRef(null);
 
-    const fetchTrip = useCallback(async () => {
-        setLoading(true);
+    const fetchTrip = useCallback(async (silent = false) => {
+        if (!silent) setLoading(true);
         try {
             const url = user?.role === 'ADMIN' ? `/admin/trips/${id}` : `/drivers/me/trips/${id}`;
             const res = await api.get(url);
             setTrip(res.data);
         } catch {
-            addAlert?.({ type: 'ERROR', message: 'Failed to fetch trip.' });
+            if (!silent) addAlert?.({ type: 'ERROR', message: 'Failed to fetch trip.' });
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     }, [id, user, addAlert]);
 
-    useEffect(() => { if (user) fetchTrip(); }, [user, fetchTrip]);
+    useEffect(() => {
+        if (!user) return;
+        fetchTrip();
+        // Poll every 5 s so occupancy and tickets stay live
+        pollRef.current = setInterval(() => fetchTrip(true), 5000);
+        return () => clearInterval(pollRef.current);
+    }, [user, fetchTrip]);
+
+
 
     const { origin, destination, capacity, sold, occupancy } = useMemo(() => {
         if (!trip) return { origin: '—', destination: '—', capacity: 0, sold: 0, occupancy: 0 };
@@ -35,7 +44,8 @@ const TripDetails = () => {
         const o = isOutbound ? trip.route?.start_location : trip.route?.end_location;
         const d = isOutbound ? trip.route?.end_location : trip.route?.start_location;
         const cap = trip.vehicle?.capacity || 50;
-        const s = trip.tickets?.length || 0;
+        // Use passenger_count (updated by camera) as the primary source; fall back to ticket count
+        const s = trip.passenger_count ?? trip.tickets?.length ?? 0;
         return {
             origin: o || '—',
             destination: d || '—',
@@ -80,6 +90,11 @@ const TripDetails = () => {
                             <Icon name="arrow-left" />Back
                         </button>
                         <Tag status={trip.status || 'SCHEDULED'} />
+                        {(trip.is_late || trip.is_late_now) && (
+                            <span className="tag crit" style={{ animation: 'pulse 2s infinite', fontWeight: 700 }}>
+                                <span className="dot" />LATE
+                            </span>
+                        )}
                     </>
                 )}
             />
@@ -181,9 +196,7 @@ const TripDetails = () => {
                 <Panel
                     title="Passenger manifest"
                     action={
-                        <span className="mono text-xs muted">
-                            {trip.tickets?.length || 0} issued
-                        </span>
+                        <span className="mono text-xs muted">{trip.tickets?.length || 0} issued</span>
                     }
                     flush
                 >
@@ -193,7 +206,8 @@ const TripDetails = () => {
                         <table className="tbl">
                             <thead>
                                 <tr>
-                                    <th style={{ width: 60 }}>ID</th>
+                                    <th style={{ width: 50 }}>#</th>
+                                    <th style={{ width: 70 }}>DB ID</th>
                                     <th>Code</th>
                                     <th>Passenger</th>
                                     <th>Seat</th>
@@ -202,9 +216,10 @@ const TripDetails = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {trip.tickets.map((t) => (
+                                {trip.tickets.map((t, idx) => (
                                     <tr key={t.id}>
-                                        <td className="mono text-sm">{t.id}</td>
+                                        <td className="mono text-sm">{idx + 1}</td>
+                                        <td className="mono text-xs muted">{t.id}</td>
                                         <td className="mono text-sm">{t.ticket_code}</td>
                                         <td>{t.passenger_name || t.passenger || '—'}</td>
                                         <td className="mono text-xs">{t.seat_number || t.seat || '—'}</td>

@@ -36,7 +36,7 @@ def _purge_expired_refresh_tokens():
 
 
 @router.post("/login", response_model=Token)
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 async def login(request: Request, form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Annotated[AsyncSession, Depends(get_db)]):
     stmt = select(User).where(User.email == form_data.username)
     result = await db.execute(stmt)

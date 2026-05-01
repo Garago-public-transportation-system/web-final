@@ -1,11 +1,11 @@
 from typing import Annotated, List, Optional
 from datetime import date, datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.api.deps import get_current_user_with_role
-from app.models.models import UserRole, User, Driver, Vehicle, Route, RouteStop, RotationAssignment, MaintenanceRequest, AuditLog, TripDirection, MaintenanceStatus, DriverStatus, VehicleStatus, Trip, TripStatus
+from app.models.models import UserRole, User, Driver, Vehicle, Route, RouteStop, RotationAssignment, MaintenanceRequest, AuditLog, TripDirection, MaintenanceStatus, DriverStatus, VehicleStatus, Trip, TripStatus, Ticket, TripTicketStatus
 from app.schemas.schemas import (
     UserCreate, UserUpdate, UserResponse,
     DriverCreate, DriverUpdate, DriverResponse,
@@ -13,8 +13,8 @@ from app.schemas.schemas import (
     RouteCreate, RouteUpdate, RouteResponse,
     RotationAssignmentCreate, RotationAssignmentResponse,
     AdminDashboardStats, AuditLogResponse,
-    UserWithDriverCreate, TicketCreate, TicketResponse,
-    MaintenanceResponse
+    UserWithDriverCreate, TicketResponse,
+    MaintenanceResponse, TripAssignRequest, DriverTicketIssueRequest
 )
 from app.core.security import security
 from app.services.audit_service import log_action
@@ -165,6 +165,258 @@ async def force_generate_schedule(
 
     return {"message": f"{action} {len(trips)} trips for today.", "count": len(trips)}
 
+@router.delete("/trips")
+async def delete_all_trips(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    date_filter: Optional[date] = None,
+):
+    """Delete all trips (optionally for one date) and reset the affected drivers/vehicles."""
+    from sqlalchemy import delete, update, cast, Date, or_
+    from app.models.models import Ticket, DriverExchange, RotationAssignment
+
+    trip_where = (cast(Trip.scheduled_start, Date) == date_filter,) if date_filter else ()
+    rot_where = (RotationAssignment.shift_date == date_filter,) if date_filter else ()
+
+    trip_ids_stmt = select(Trip.id).where(*trip_where)
+    rot_ids_stmt = select(RotationAssignment.id).where(*rot_where)
+
+    affected = (await db.execute(select(Trip.driver_id, Trip.vehicle_id).where(*trip_where))).all()
+    driver_ids = list({r[0] for r in affected if r[0]})
+    vehicle_ids = list({r[1] for r in affected if r[1]})
+
+    await db.execute(
+        delete(DriverExchange).where(
+            or_(
+                DriverExchange.rotation_assignment_id.in_(rot_ids_stmt),
+                DriverExchange.trip_id.in_(trip_ids_stmt),
+            )
+        )
+    )
+    await db.execute(delete(Ticket).where(Ticket.trip_id.in_(trip_ids_stmt)))
+    await db.execute(delete(Trip).where(*trip_where))
+    await db.execute(delete(RotationAssignment).where(*rot_where))
+
+    if driver_ids:
+        await db.execute(
+            update(Driver).where(Driver.id.in_(driver_ids)).values(
+                status=DriverStatus.OFF_DUTY,
+                current_vehicle_id=None,
+                current_route_id=None,
+                current_shift=None,
+                shift_start_time=None,
+                shift_end_time=None,
+            )
+        )
+    if vehicle_ids:
+        await db.execute(
+            update(Vehicle).where(Vehicle.id.in_(vehicle_ids)).values(status=VehicleStatus.FREE)
+        )
+
+    await db.commit()
+    return {"message": f"Cleared {len(affected)} trips, reset {len(driver_ids)} drivers.", "count": len(affected)}
+
+@router.delete("/trips/{trip_id}")
+async def delete_trip(trip_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
+    """Delete a single trip and reset its driver and vehicle."""
+    from sqlalchemy import delete, update
+    from app.models.models import Ticket, DriverExchange
+
+    trip = await db.scalar(select(Trip).where(Trip.id == trip_id))
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+
+    driver_id = trip.driver_id
+    vehicle_id = trip.vehicle_id
+
+    await db.execute(delete(DriverExchange).where(DriverExchange.trip_id == trip_id))
+    await db.execute(delete(Ticket).where(Ticket.trip_id == trip_id))
+    await db.execute(delete(Trip).where(Trip.id == trip_id))
+
+    if driver_id:
+        await db.execute(
+            update(Driver).where(Driver.id == driver_id).values(
+                status=DriverStatus.OFF_DUTY,
+                current_vehicle_id=None,
+                current_route_id=None,
+                current_shift=None,
+                shift_start_time=None,
+                shift_end_time=None,
+            )
+        )
+    if vehicle_id:
+        await db.execute(update(Vehicle).where(Vehicle.id == vehicle_id).values(status=VehicleStatus.FREE))
+
+    await db.commit()
+    return {"message": f"Trip {trip_id} deleted and driver/vehicle reset."}
+
+@router.patch("/trips/{trip_id}/assign")
+async def assign_trip(
+    trip_id: int,
+    body: TripAssignRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """
+    Manually assign a driver (and optionally a vehicle) to a scheduled trip.
+
+    Checks:
+    - Trip exists and is SCHEDULED (not COMPLETED/CANCELLED/ACTIVE).
+    - New driver exists and is not currently ON_TRIP.
+    - New driver has no time-overlapping SCHEDULED or ACTIVE trip.
+    - Vehicle (if given) is FREE or already on this trip; otherwise auto-selects one.
+    """
+
+    trip = await db.scalar(select(Trip).where(Trip.id == trip_id))
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    if trip.status in (TripStatus.COMPLETED, TripStatus.CANCELLED):
+        raise HTTPException(status_code=400, detail=f"Cannot reassign a {trip.status.value} trip")
+
+    new_driver = await db.scalar(select(Driver).where(Driver.id == body.driver_id))
+    if not new_driver:
+        raise HTTPException(status_code=404, detail=f"Driver {body.driver_id} not found")
+    if new_driver.status == DriverStatus.ON_TRIP:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Driver {body.driver_id} is currently ON_TRIP and cannot be reassigned"
+        )
+
+    # Check for overlapping trips for this driver (excluding the current trip)
+    overlap = await db.scalar(
+        select(func.count(Trip.id)).where(
+            Trip.driver_id == body.driver_id,
+            Trip.id != trip_id,
+            Trip.status.in_([TripStatus.SCHEDULED, TripStatus.ACTIVE]),
+            Trip.scheduled_start < trip.scheduled_end,
+            Trip.scheduled_end > trip.scheduled_start,
+        )
+    )
+    if overlap:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Driver {body.driver_id} already has a trip overlapping {trip.scheduled_start} – {trip.scheduled_end}"
+        )
+
+    # Resolve vehicle
+    vehicle_id = body.vehicle_id
+    if vehicle_id and vehicle_id != trip.vehicle_id:
+        vehicle = await db.scalar(select(Vehicle).where(Vehicle.id == vehicle_id))
+        if not vehicle:
+            raise HTTPException(status_code=404, detail=f"Vehicle {vehicle_id} not found")
+        if vehicle.status != VehicleStatus.FREE:
+            raise HTTPException(status_code=409, detail=f"Vehicle {vehicle_id} is not FREE (status: {vehicle.status.value})")
+    elif not vehicle_id:
+        # Auto-select a free vehicle
+        vehicle_id = await db.scalar(select(Vehicle.id).where(Vehicle.status == VehicleStatus.FREE).limit(1))
+        if not vehicle_id:
+            raise HTTPException(status_code=409, detail="No free vehicles available for this trip")
+    else:
+        vehicle_id = trip.vehicle_id  # same vehicle, no change needed
+
+    old_driver_id = trip.driver_id if trip.driver_id != body.driver_id else None
+    old_vehicle_id = trip.vehicle_id if trip.vehicle_id != vehicle_id else None
+
+    # Free up old driver if changed
+    if old_driver_id:
+        other_trips = await db.scalar(
+            select(func.count(Trip.id)).where(
+                Trip.driver_id == old_driver_id,
+                Trip.id != trip_id,
+                Trip.status.in_([TripStatus.SCHEDULED, TripStatus.ACTIVE]),
+            )
+        )
+        if not other_trips:
+            await db.execute(
+                update(Driver).where(Driver.id == old_driver_id).values(
+                    status=DriverStatus.OFF_DUTY,
+                    current_vehicle_id=None,
+                    current_route_id=None,
+                )
+            )
+
+    # Free up old vehicle if changed
+    if old_vehicle_id:
+        other_trips_v = await db.scalar(
+            select(func.count(Trip.id)).where(
+                Trip.vehicle_id == old_vehicle_id,
+                Trip.id != trip_id,
+                Trip.status.in_([TripStatus.SCHEDULED, TripStatus.ACTIVE]),
+            )
+        )
+        if not other_trips_v:
+            await db.execute(update(Vehicle).where(Vehicle.id == old_vehicle_id).values(status=VehicleStatus.FREE))
+
+    # Assign new driver and vehicle to trip
+    trip.driver_id = body.driver_id
+    trip.vehicle_id = vehicle_id
+
+    # Update new driver — mark ACTIVE with this vehicle/route
+    await db.execute(
+        update(Driver).where(Driver.id == body.driver_id).values(
+            status=DriverStatus.ACTIVE,
+            current_vehicle_id=vehicle_id,
+            current_route_id=trip.route_id,
+        )
+    )
+    # Mark new vehicle as ASSIGNED
+    await db.execute(update(Vehicle).where(Vehicle.id == vehicle_id).values(status=VehicleStatus.ASSIGNED))
+
+    await db.commit()
+    await db.refresh(trip)
+    return {
+        "message": f"Trip {trip_id} assigned to driver {body.driver_id} with vehicle {vehicle_id}",
+        "trip_id": trip_id,
+        "driver_id": body.driver_id,
+        "vehicle_id": vehicle_id,
+    }
+
+@router.post("/trips/{trip_id}/tickets", response_model=TicketResponse, status_code=201)
+async def admin_issue_ticket(
+    trip_id: int,
+    payload: DriverTicketIssueRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Admin manually issues a ticket for any SCHEDULED or ACTIVE trip."""
+    import uuid as _uuid
+
+    trip = await db.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    if trip.status not in (TripStatus.SCHEDULED, TripStatus.ACTIVE):
+        raise HTTPException(status_code=400, detail=f"Cannot issue ticket for a {trip.status.value} trip")
+
+    vehicle = await db.get(Vehicle, trip.vehicle_id)
+    capacity = vehicle.capacity if vehicle else 50
+
+    current_count = await db.scalar(
+        select(func.count(Ticket.id)).where(Ticket.trip_id == trip_id)
+    ) or 0
+    if current_count >= capacity:
+        raise HTTPException(status_code=400, detail=f"Bus is full ({capacity}/{capacity} seats taken)")
+
+    route = await db.get(Route, trip.route_id)
+    DEFAULT_FARE = 15.0
+    price = route.fare if route and route.fare and route.fare > 0 else DEFAULT_FARE
+
+    # Unique ticket code
+    for _ in range(5):
+        code = _uuid.uuid4().hex[:8].upper()
+        if not await db.scalar(select(Ticket.id).where(Ticket.ticket_code == code)):
+            break
+
+    ticket = Ticket(
+        trip_id=trip_id,
+        passenger_name=payload.passenger_name,
+        seat_number=payload.seat_number,
+        price=price,
+        ticket_code=code,
+        status=TripTicketStatus.ISSUED,
+    )
+    db.add(ticket)
+    trip.passenger_count = current_count + 1
+    await db.commit()
+    await db.refresh(ticket)
+    return ticket
+
 @router.get("/trips/{id}", response_model=dict)
 async def get_trip_details(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     from app.services.trip_service import build_trip_detail
@@ -212,7 +464,10 @@ async def get_trips(db: Annotated[AsyncSession, Depends(get_db)], date_filter: O
             "end_time": t.scheduled_end,
             "route_name": t.route.name if t.route else "Unknown",
             "driver_name": t.driver.user.full_name if t.driver and t.driver.user else "Unknown",
-            "vehicle_plate": t.vehicle.plate_number if t.vehicle else "Unknown"
+            "driver_id": t.driver_id,
+            "vehicle_id": t.vehicle_id,
+            "vehicle_plate": t.vehicle.plate_number if t.vehicle else "Unknown",
+            "is_late": bool(t.is_late),
         })
     return serialized
 

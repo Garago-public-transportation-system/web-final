@@ -186,7 +186,6 @@ class Vehicle(Base):
     current_latitude: Mapped[Optional[float]] = mapped_column(Float)
     current_longitude: Mapped[Optional[float]] = mapped_column(Float)
     mileage: Mapped[float] = mapped_column(Float, default=0.0)
-    fuel_level: Mapped[float] = mapped_column(Float, default=100.0)
     last_maintenance_date: Mapped[Optional[date]] = mapped_column(Date)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
@@ -567,8 +566,6 @@ class GpsTracking(Base):
     trip_id: Mapped[Optional[int]] = mapped_column(ForeignKey("trips.id"))
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
-    speed: Mapped[float] = mapped_column(Float, nullable=False)
-    heading: Mapped[float] = mapped_column(Float, nullable=False)
     recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
 

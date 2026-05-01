@@ -37,6 +37,10 @@ const Schedule = () => {
     const [tripsLoading, setTripsLoading] = useState(true);
     const [rotationLoading, setRotationLoading] = useState(true);
     const [busy, setBusy] = useState(false);
+    const [vehicles, setVehicles] = useState([]);
+    const [assignModal, setAssignModal] = useState(null); // { trip } | null
+    const [assignForm, setAssignForm] = useState({ driver_id: '', vehicle_id: '' });
+    const [assigning, setAssigning] = useState(false);
 
     const weekDays = useMemo(
         () => Array.from({ length: 7 }, (_, i) => {
@@ -73,7 +77,7 @@ const Schedule = () => {
     const fetchRoster = useCallback(async () => {
         setRotationLoading(true);
         try {
-            const [rot, drv] = await Promise.all([
+            const [rot, drv, veh] = await Promise.all([
                 api.get('/admin/rotations', {
                     params: {
                         start_date: fmtDateISO(weekDays[0]),
@@ -81,9 +85,11 @@ const Schedule = () => {
                     },
                 }).catch(() => ({ data: [] })),
                 api.get('/admin/drivers').catch(() => ({ data: [] })),
+                api.get('/admin/vehicles').catch(() => ({ data: [] })),
             ]);
             setRotations(rot.data || []);
             setDrivers(drv.data || []);
+            setVehicles(veh.data || []);
         } catch {
             addAlert?.({ type: 'ERROR', message: t('schedule.failedRoster') });
         } finally {
@@ -91,8 +97,60 @@ const Schedule = () => {
         }
     }, [weekDays, addAlert, t]);
 
+    const openAssign = (trip) => {
+        setAssignModal(trip);
+        setAssignForm({ driver_id: String(trip.driver_id || ''), vehicle_id: String(trip.vehicle_id || '') });
+    };
+
+    const submitAssign = async () => {
+        if (!assignForm.driver_id) {
+            addAlert?.({ type: 'WARN', message: 'Please select a driver.' });
+            return;
+        }
+        setAssigning(true);
+        try {
+            const payload = { driver_id: Number(assignForm.driver_id) };
+            if (assignForm.vehicle_id) payload.vehicle_id = Number(assignForm.vehicle_id);
+            const res = await api.patch(`/admin/trips/${assignModal.id}/assign`, payload);
+            addAlert?.({ type: 'OK', message: res.data?.message || 'Trip assigned.' });
+            setAssignModal(null);
+            await fetchTrips();
+            await fetchRoster();
+        } catch (err) {
+            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || 'Assignment failed.' });
+        } finally {
+            setAssigning(false);
+        }
+    };
+
     useEffect(() => { fetchTrips(); }, [fetchTrips]);
     useEffect(() => { fetchRoster(); }, [fetchRoster]);
+
+    const clearAllTrips = async () => {
+        if (!window.confirm('This will delete ALL trips and reset all driver/vehicle statuses. Continue?')) return;
+        setBusy(true);
+        try {
+            const res = await api.delete('/admin/trips');
+            addAlert?.({ type: 'OK', message: res.data?.message || 'All trips cleared.' });
+            await fetchTrips();
+            await fetchRoster();
+        } catch (err) {
+            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || 'Failed to clear trips.' });
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const deleteTrip = async (tripId) => {
+        if (!window.confirm('Delete this trip and reset the driver/vehicle?')) return;
+        try {
+            await api.delete(`/admin/trips/${tripId}`);
+            addAlert?.({ type: 'OK', message: 'Trip deleted.' });
+            setTrips((prev) => prev.filter((t) => t.id !== tripId));
+        } catch (err) {
+            addAlert?.({ type: 'ERROR', message: err?.response?.data?.detail || 'Failed to delete trip.' });
+        }
+    };
 
     const generate = async (regenerate) => {
         if (regenerate && !window.confirm(t('schedule.regenerateConfirm'))) {
@@ -210,6 +268,9 @@ const Schedule = () => {
                     : `${t('schedule.tripsCount', { n: trips.length })} · ${todayLabel}`}
                 actions={(
                     <>
+                        <button className="btn danger" onClick={clearAllTrips} disabled={busy}>
+                            <Icon name="trash" />{busy ? t('shell.working') : 'Clear All Trips'}
+                        </button>
                         <button className="btn" onClick={() => generate(true)} disabled={busy}>
                             <Icon name="reroute" />{busy ? t('shell.working') : t('schedule.regenerate')}
                         </button>
@@ -411,7 +472,7 @@ const Schedule = () => {
                                         <th>{t('shell.driver')}</th>
                                         <th>{t('shell.vehicle')}</th>
                                         <th>{t('common.status')}</th>
-                                        <th style={{ width: 110 }}>{t('shell.actions')}</th>
+                                        <th style={{ width: 160 }}>{t('shell.actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -444,14 +505,40 @@ const Schedule = () => {
                                             </td>
                                             <td>{trip.driver_name}</td>
                                             <td className="mono text-xs">{trip.vehicle_plate}</td>
-                                            <td><Tag status={trip.status || 'SCHEDULED'} /></td>
                                             <td>
-                                                <button
-                                                    className="btn ghost"
-                                                    onClick={() => navigate(`/admin/trips/${trip.id}`)}
-                                                >
-                                                    {t('shell.details')}
-                                                </button>
+                                                <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                                    <Tag status={trip.status || 'SCHEDULED'} />
+                                                    {trip.is_late && (
+                                                        <span className="tag crit" style={{ fontWeight: 700 }}>
+                                                            <span className="dot" />LATE
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                                    <button
+                                                        className="btn ghost"
+                                                        onClick={() => navigate(`/admin/trips/${trip.id}`)}
+                                                    >
+                                                        {t('shell.details')}
+                                                    </button>
+                                                    <button
+                                                        className="btn ghost"
+                                                        onClick={() => openAssign(trip)}
+                                                        title="Reassign driver / vehicle"
+                                                    >
+                                                        <Icon name="user-edit" />
+                                                    </button>
+                                                    <button
+                                                        className="btn ghost"
+                                                        onClick={() => deleteTrip(trip.id)}
+                                                        title="Delete trip"
+                                                        style={{ color: 'var(--crit)' }}
+                                                    >
+                                                        <Icon name="trash" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -461,6 +548,68 @@ const Schedule = () => {
                     </Panel>
                 )}
             </div>
+
+        {assignModal && (
+            <div style={{
+                position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+            }}>
+                <div style={{
+                    background: 'var(--bg)', borderRadius: 12, padding: 28,
+                    minWidth: 360, maxWidth: 480, width: '90%', boxShadow: '0 8px 32px rgba(0,0,0,.3)',
+                }}>
+                    <h3 style={{ margin: '0 0 4px' }}>Assign Trip #{assignModal.trip_number}</h3>
+                    <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--ink-4, #7c7b74)' }}>
+                        {assignModal.route_name} · {assignModal.origin} → {assignModal.destination}
+                    </p>
+
+                    <label style={{ display: 'block', marginBottom: 12 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Driver</span>
+                        <select
+                            value={assignForm.driver_id}
+                            onChange={(e) => setAssignForm((f) => ({ ...f, driver_id: e.target.value }))}
+                            style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid var(--line, #e5e3dc)', background: 'var(--bg)', fontSize: 14 }}
+                        >
+                            <option value="">— select driver —</option>
+                            {drivers
+                                .filter((d) => d.status !== 'ON_TRIP')
+                                .map((d) => (
+                                    <option key={d.id} value={d.id}>
+                                        {d.user?.full_name || `Driver #${d.id}`} — {d.status}
+                                    </option>
+                                ))}
+                        </select>
+                    </label>
+
+                    <label style={{ display: 'block', marginBottom: 24 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 4 }}>Vehicle <span style={{ fontWeight: 400, color: 'var(--ink-4)' }}>(auto-select if blank)</span></span>
+                        <select
+                            value={assignForm.vehicle_id}
+                            onChange={(e) => setAssignForm((f) => ({ ...f, vehicle_id: e.target.value }))}
+                            style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid var(--line, #e5e3dc)', background: 'var(--bg)', fontSize: 14 }}
+                        >
+                            <option value="">— auto-select —</option>
+                            {vehicles
+                                .filter((v) => v.status === 'FREE' || v.id === assignModal.vehicle_id)
+                                .map((v) => (
+                                    <option key={v.id} value={v.id}>
+                                        {v.plate_number} — {v.status}
+                                    </option>
+                                ))}
+                        </select>
+                    </label>
+
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                        <button className="btn ghost" onClick={() => setAssignModal(null)} disabled={assigning}>
+                            Cancel
+                        </button>
+                        <button className="btn primary" onClick={submitAssign} disabled={assigning}>
+                            {assigning ? 'Assigning…' : 'Confirm Assignment'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
         </>
     );
 };
