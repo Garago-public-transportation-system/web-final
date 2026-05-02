@@ -57,9 +57,10 @@ const int pwmResolution = 16;
 uint32_t angleToDuty(int angle) {
   return (uint32_t)map(angle, 0, 180, 1638, 8192);
 }
-void setGateIn(bool open) { ledcWrite(SERVO_IN, angleToDuty(open ? 90 : 0)); }
-void setGateOut(bool open) { ledcWrite(SERVO_OUT, angleToDuty(open ? 90 : 0)); }
-
+// Open angle is on the opposite side of the closed angle so each arm rotates
+// UP (toward the sky) instead of DOWN when the gate opens.
+void setGateIn(bool open) { ledcWrite(SERVO_IN, angleToDuty(open ? 0 : 180)); }
+void setGateOut(bool open) { ledcWrite(SERVO_OUT, angleToDuty(open ? 180 : 90)); }
 // ─── Ultrasonic
 // ───────────────────────────────────────────────────────────────
 long readDistanceCM(int trigPin, int echoPin) {
@@ -188,24 +189,24 @@ bool triggerCamera(const char *url, const char *name) {
 
 // ─── FreeRTOS gate tasks
 // ──────────────────────────────────────────────────────
+// Camera/ANPR is intentionally bypassed: detection alone authorises the gate.
+// Sensor confirms an object → wait GATE_OPEN_DELAY_MS → open the servo.
+#define GATE_OPEN_DELAY_MS 5000
+
 void entryGateTask(void * /*param*/) {
   if (carCount >= MAX_CARS) {
     Serial.println("ENTRY BLOCKED: full");
     sendLog("ENTRY BLOCKED: full");
   } else {
-    Serial.println("ENTRY detected — calling camera");
-    sendLog("ENTRY detected");
-    if (triggerCamera(ENTRY_CAM_URL, "CAM_ENTRY")) {
-      setGateIn(true);
-      gateInOpen = true;
-      gateInOpenTime = millis();
-      gateInLastSeen = millis();
-      Serial.println("Entry GRANTED — gate open");
-      sendLog("Entry GRANTED");
-    } else {
-      Serial.println("Entry DENIED");
-      sendLog("Entry DENIED");
-    }
+    Serial.println("ENTRY detected — opening in 5s (camera bypassed)");
+    sendLog("ENTRY detected — opening in 5s");
+    vTaskDelay(pdMS_TO_TICKS(GATE_OPEN_DELAY_MS));
+    setGateIn(true);
+    gateInOpen = true;
+    gateInOpenTime = millis();
+    gateInLastSeen = millis();
+    Serial.println("Entry gate open");
+    sendLog("Entry gate open");
   }
   entryBusy = false;
   vTaskDelete(NULL);
@@ -216,19 +217,15 @@ void exitGateTask(void * /*param*/) {
     Serial.println("EXIT IGNORED: empty");
     sendLog("EXIT IGNORED: empty");
   } else {
-    Serial.println("EXIT detected — calling camera");
-    sendLog("EXIT detected");
-    if (triggerCamera(EXIT_CAM_URL, "CAM_EXIT")) {
-      setGateOut(true);
-      gateOutOpen = true;
-      gateOutOpenTime = millis();
-      gateOutLastSeen = millis();
-      Serial.println("Exit GRANTED — gate open");
-      sendLog("Exit GRANTED");
-    } else {
-      Serial.println("Exit DENIED");
-      sendLog("Exit DENIED");
-    }
+    Serial.println("EXIT detected — opening in 5s (camera bypassed)");
+    sendLog("EXIT detected — opening in 5s");
+    vTaskDelay(pdMS_TO_TICKS(GATE_OPEN_DELAY_MS));
+    setGateOut(true);
+    gateOutOpen = true;
+    gateOutOpenTime = millis();
+    gateOutLastSeen = millis();
+    Serial.println("Exit gate open");
+    sendLog("Exit gate open");
   }
   exitBusy = false;
   vTaskDelete(NULL);
