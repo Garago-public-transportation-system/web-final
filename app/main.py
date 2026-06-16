@@ -13,6 +13,11 @@ from slowapi.errors import RateLimitExceeded
 from app.core.rate_limit import limiter
 import logging
 
+# Configure the root logger to output INFO level logs to the console
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s:\t  %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager

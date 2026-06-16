@@ -59,8 +59,10 @@ uint32_t angleToDuty(int angle) {
 }
 // Open angle is on the opposite side of the closed angle so each arm rotates
 // UP (toward the sky) instead of DOWN when the gate opens.
-void setGateIn(bool open) { ledcWrite(SERVO_IN, angleToDuty(open ? 0 : 180)); }
-void setGateOut(bool open) { ledcWrite(SERVO_OUT, angleToDuty(open ? 180 : 90)); }
+void setGateIn(bool open) { ledcWrite(SERVO_IN, angleToDuty(open ? 0 : 90)); }
+void setGateOut(bool open) {
+  ledcWrite(SERVO_OUT, angleToDuty(open ? 90 : 180));
+}
 // ─── Ultrasonic
 // ───────────────────────────────────────────────────────────────
 long readDistanceCM(int trigPin, int echoPin) {
@@ -189,24 +191,30 @@ bool triggerCamera(const char *url, const char *name) {
 
 // ─── FreeRTOS gate tasks
 // ──────────────────────────────────────────────────────
-// Camera/ANPR is intentionally bypassed: detection alone authorises the gate.
-// Sensor confirms an object → wait GATE_OPEN_DELAY_MS → open the servo.
-#define GATE_OPEN_DELAY_MS 5000
+// Flow: sensor confirms object → trigger camera ESP32-CAM via HTTP GET
+//       → camera captures & uploads to backend ANPR → replies "GRANTED" or
+//         "DENIED" → open servo only on GRANTED.
+// Stack: 12 KB — HTTPClient + WiFiClient + String response need >8 KB.
 
 void entryGateTask(void * /*param*/) {
   if (carCount >= MAX_CARS) {
-    Serial.println("ENTRY BLOCKED: full");
+    Serial.println("ENTRY BLOCKED: garage full");
     sendLog("ENTRY BLOCKED: full");
   } else {
-    Serial.println("ENTRY detected — opening in 5s (camera bypassed)");
-    sendLog("ENTRY detected — opening in 5s");
-    vTaskDelay(pdMS_TO_TICKS(GATE_OPEN_DELAY_MS));
-    setGateIn(true);
-    gateInOpen = true;
-    gateInOpenTime = millis();
-    gateInLastSeen = millis();
-    Serial.println("Entry gate open");
-    sendLog("Entry gate open");
+    Serial.println("ENTRY detected — calling entry camera for ANPR");
+    sendLog("ENTRY detected — calling entry camera");
+    bool granted = triggerCamera(ENTRY_CAM_URL, "EntryCam");
+    if (granted) {
+      setGateIn(true);
+      gateInOpen = true;
+      gateInOpenTime = millis();
+      gateInLastSeen = millis();
+      Serial.println("Entry gate OPEN — ANPR granted");
+      sendLog("Entry gate open — ANPR granted");
+    } else {
+      Serial.println("Entry gate DENIED by ANPR");
+      sendLog("Entry gate denied — ANPR");
+    }
   }
   entryBusy = false;
   vTaskDelete(NULL);
@@ -214,18 +222,23 @@ void entryGateTask(void * /*param*/) {
 
 void exitGateTask(void * /*param*/) {
   if (carCount <= 0) {
-    Serial.println("EXIT IGNORED: empty");
+    Serial.println("EXIT IGNORED: garage empty");
     sendLog("EXIT IGNORED: empty");
   } else {
-    Serial.println("EXIT detected — opening in 5s (camera bypassed)");
-    sendLog("EXIT detected — opening in 5s");
-    vTaskDelay(pdMS_TO_TICKS(GATE_OPEN_DELAY_MS));
-    setGateOut(true);
-    gateOutOpen = true;
-    gateOutOpenTime = millis();
-    gateOutLastSeen = millis();
-    Serial.println("Exit gate open");
-    sendLog("Exit gate open");
+    Serial.println("EXIT detected — calling exit camera for ANPR");
+    sendLog("EXIT detected — calling exit camera");
+    bool granted = triggerCamera(EXIT_CAM_URL, "ExitCam");
+    if (granted) {
+      setGateOut(true);
+      gateOutOpen = true;
+      gateOutOpenTime = millis();
+      gateOutLastSeen = millis();
+      Serial.println("Exit gate OPEN — ANPR granted");
+      sendLog("Exit gate open — ANPR granted");
+    } else {
+      Serial.println("Exit gate DENIED by ANPR");
+      sendLog("Exit gate denied — ANPR");
+    }
   }
   exitBusy = false;
   vTaskDelete(NULL);
@@ -263,6 +276,8 @@ void setup() {
 
   prefs.begin("garage", false);
   carCount = prefs.getInt("carCount", 0);
+  prefs.putInt("carCount", 4); 
+  carCount = 4;
   Serial.println("Restored carCount: " + String(carCount));
 
   updateStatusLEDs();
@@ -326,7 +341,7 @@ void loop() {
       !gateInOpen) {
     inDetected = true;
     entryBusy = true;
-    xTaskCreate(entryGateTask, "entry_gate", 8192, NULL, 1, NULL);
+    xTaskCreate(entryGateTask, "entry_gate", 12288, NULL, 1, NULL);
   }
   if (inClearStreak >= CLEAR_CONFIRM_N)
     inDetected = false;
@@ -335,7 +350,7 @@ void loop() {
       !gateOutOpen) {
     outDetected = true;
     exitBusy = true;
-    xTaskCreate(exitGateTask, "exit_gate", 8192, NULL, 1, NULL);
+    xTaskCreate(exitGateTask, "exit_gate", 12288, NULL, 1, NULL);
   }
   if (outClearStreak >= CLEAR_CONFIRM_N)
     outDetected = false;

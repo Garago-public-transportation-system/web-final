@@ -574,3 +574,16 @@ class GpsTracking(Base):
 
     vehicle: Mapped["Vehicle"] = relationship("Vehicle")
     trip: Mapped[Optional["Trip"]] = relationship("Trip")
+
+
+class DeviceLog(Base):
+    __tablename__ = "device_logs"
+    __table_args__ = (
+        Index("idx_device_log_device", "device"),
+        Index("idx_device_log_created", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    device: Mapped[str] = mapped_column(String(100), nullable=False)
+    msg: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())

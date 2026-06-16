@@ -6,7 +6,7 @@
 
 // ─── Backend (local network)
 // ──────────────────────────────────────────────────
-#define BACKEND_BASE "http://192.168.1.15:8000/api/v1/hardware"
+#define BACKEND_BASE "http://192.168.1.14:8000/api/v1/hardware"
 
 // ─── Hardware API Key — must match HARDWARE_API_KEY in backend .env
 // ───────────

@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.config import settings
 from app.models.models import (
-    Vehicle, GateLog, CameraReading, CrowdingEvent
+    Vehicle, GateLog, CameraReading, CrowdingEvent, DeviceLog
 )
 from app.schemas.schemas import ANPRData, CameraData
 from pydantic import BaseModel
@@ -104,7 +104,7 @@ async def ingest_anpr(request: Request, data: ANPRData, db: Annotated[AsyncSessi
 
     # OCR confidence boundary: [0.60, 1.0] makes an active GRANT/DENY decision.
     # Confidence == 0.60 is included (NOT IGNORED). Below 0.60 → IGNORED.
-    if data.confidence < 0.60:
+    if data.confidence < 0.50:
         logger.info(
             f"[GATE {data.gate_id}] DECISION: IGNORED (confidence {data.confidence:.2f} below 0.60)"
         )
@@ -248,9 +248,11 @@ class DeviceLogData(BaseModel):
 
 @router.post("/log", status_code=status.HTTP_204_NO_CONTENT)
 @limiter.limit("120/minute")
-async def ingest_device_log(request: Request, data: DeviceLogData):
-    """Receives diagnostic log messages from ESP32 devices."""
+async def ingest_device_log(request: Request, data: DeviceLogData, db: Annotated[AsyncSession, Depends(get_db)]):
+    """Receives diagnostic log messages from ESP32 devices and persists them."""
     logger.info(f"[DEVICE LOG] {data.device}: {data.msg}")
+    db.add(DeviceLog(device=data.device, msg=data.msg))
+    await db.commit()
     return
 
 
@@ -284,7 +286,41 @@ async def upload_raw_image(
         raise HTTPException(status_code=422, detail="Invalid image data — could not decode JPEG")
 
     reader = get_ocr_reader()
-    results = reader.readtext(frame, detail=1)
+    
+    # ─── 1. OpenCV Preprocessing ──────────────────────────────────────────────
+    # Convert to grayscale
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # Apply bilateral filter to reduce camera sensor noise while keeping plate edges sharp
+    filtered = cv2.bilateralFilter(gray, 11, 17, 17)
+    # Scale contrast slightly so dark letters pop against reflective plate backgrounds
+    enhanced = cv2.convertScaleAbs(filtered, alpha=1.2, beta=10)
+    
+    # ─── 2. AI Constraints ────────────────────────────────────────────────────
+    # Physically prevent EasyOCR from guessing lowercase letters or weird punctuation
+    # (common on buses with bumper stickers).
+    valid_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"
+    
+    # First pass: full enhanced image
+    results = reader.readtext(enhanced, detail=1, allowlist=valid_chars, paragraph=False)
+    
+    # ─── 3. Multi-Scale Fallback (Auto-Zoom) ──────────────────────────────────
+    # If it found nothing, or the best confidence is weak (< 60%), try cropping
+    # into the center 50% of the image where the plate usually sits.
+    best_conf = max(results, key=lambda r: r[2])[2] if results else 0.0
+    
+    if best_conf < 0.60:
+        logger.info(f"[GATE {gate_id}] Full frame confidence {best_conf:.2f} is weak. Trying center crop.")
+        h, w = enhanced.shape
+        cy, cx = h // 2, w // 2
+        ch, cw = int(h * 0.5), int(w * 0.5)
+        crop = enhanced[cy - ch//2 : cy + ch//2, cx - cw//2 : cx + cw//2]
+        
+        crop_results = reader.readtext(crop, detail=1, allowlist=valid_chars, paragraph=False)
+        if crop_results:
+            crop_best_conf = max(crop_results, key=lambda r: r[2])[2]
+            if crop_best_conf > best_conf:
+                results = crop_results
+                logger.info(f"[GATE {gate_id}] Center crop yielded better confidence: {crop_best_conf:.2f}")
 
     # Log every candidate EasyOCR returned so the operator can see exactly
     # what the camera read, with confidences. This is the row that explains
@@ -319,11 +355,11 @@ async def upload_raw_image(
     vehicle = None
     match_method = "none"
 
-    # OCR confidence boundary: [0.60, 1.0] makes an active GRANT/DENY decision.
-    # Confidence == 0.60 is included (NOT IGNORED). Below 0.60 → IGNORED.
-    if ocr_confidence < 0.60:
+    # OCR confidence boundary: [0.50, 1.0] makes an active GRANT/DENY decision.
+    # Confidence == 0.50 is included (NOT IGNORED). Below 0.50 → IGNORED.
+    if ocr_confidence < 0.50:
         logger.info(
-            f"[GATE {gate_id}] DECISION: IGNORED (confidence {ocr_confidence:.2f} below 0.60)"
+            f"[GATE {gate_id}] DECISION: IGNORED (confidence {ocr_confidence:.2f} below 0.50)"
         )
     elif not plate_number:
         logger.info(f"[GATE {gate_id}] DECISION: IGNORED (empty plate after normalization)")
