@@ -33,7 +33,16 @@ from datetime import date, datetime, timedelta, timezone
 from itertools import product
 
 # ─── Target DB — NEVER the production DB ─────────────────────────────────────
-TEST_DB_URL = "postgresql+asyncpg://postgres:***REMOVED***@localhost:5432/test_smart_bus_garage"
+# Read from TEST_DATABASE_URL so no credentials live in the source tree. The
+# name must differ from the app's DATABASE_URL: this script wipes and reseeds
+# whatever it points at.
+TEST_DB_URL = os.environ.get("TEST_DATABASE_URL")
+if not TEST_DB_URL:
+    sys.exit(
+        "TEST_DATABASE_URL is not set. Point it at a throwaway database, e.g.\n"
+        "  export TEST_DATABASE_URL="
+        "'postgresql+asyncpg://<user>:<password>@localhost:5432/test_smart_bus_garage'"
+    )
 os.environ["DATABASE_URL"] = TEST_DB_URL
 
 from sqlalchemy import text
