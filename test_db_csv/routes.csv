@@ -1,4 +1,0 @@
-id,name,start_location,end_location,distance_km,estimated_time_minutes,fare,turnaround_time_minutes,is_active,created_at,updated_at
-1,Route 1,Garage,Terminal A,12.5,45.0,5.0,10.0,True,2026-04-25 12:59:49.964032+00:00,2026-04-25 12:59:49.964032+00:00
-2,Route 2,Garage,Terminal B,8.0,30.0,4.0,10.0,True,2026-04-25 12:59:49.964032+00:00,2026-04-25 12:59:49.964032+00:00
-3,Route 2,Garage,Terminal C,20.0,60.0,7.0,10.0,True,2026-04-25 12:59:49.964032+00:00,2026-04-25 12:59:49.964032+00:00

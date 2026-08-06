@@ -55,10 +55,11 @@ authenticated separately by API key with no user session.
 - The idempotency cache is a process-local dict. That is fine for a single worker and
   wrong under multiple; replacing it means introducing Redis, which is a real
   architectural decision, not a cleanup.
-- Chapter numbering under `documents/` is inconsistent (two Chapter 6s, two Chapter 7s)
-  because the write-up was reorganised late. The markdown files are the current
-  source; the PDFs are earlier renders.
-- `test_db_csv/` and `clean_dump.sql` are synthetic fixtures, not real data.
+- Sample data comes from `seed_exhaustive_matrix.py` only. It **wipes** the database
+  `TEST_DATABASE_URL` points at, so it must never be aimed at a working database.
+- The academic write-up, generated diagrams, and CSV fixtures were removed from the
+  repository to keep it to shipping code; they remain in git history before
+  commit `documents removed`.
 
 ## AI agents (auto-invoked — the user never names them)
 
